@@ -10,9 +10,11 @@
 
 package blake;
 
+import java.math.BigInteger;
+
 public class BLAKEHashState {
     public short hashbitlen;
-    public int datalen;
+    public long datalen;
     public short init;
     public short nullt;
     public int h32[];
