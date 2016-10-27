@@ -129,7 +129,6 @@ public class Blake_Algorithm {
         this.state = new Blake_HashState();
 
         status = Hash(hashbitlen,data,databitlen);
-        System.out.println(status);
     }
 
     Blake_Algorithm(int hashbitlen, short[] data, int databitlen, String salt){
@@ -183,9 +182,6 @@ public class Blake_Algorithm {
         short check[] = new short[4];
         short round;
 
-    //  #define ROT32(x,n) (((x)<<(32-n))|( (x)>>(n)))
-    //  #define ADD32(x,y)   ((u32)((x) + (y)))
-    //  #define XOR32(x,y)    ((u32)((x) ^ (y)))
 
         /* get message */
         m[0] = U8TO32_BE(Arrays.copyOfRange(datablock,0,4));
@@ -264,7 +260,6 @@ public class Blake_Algorithm {
     private long ROT64(long x, int n){
         long y;
         y = x << (64-n);
-        System.out.println(Long.toHexString(x>>>n));
         return y | (x >>> n);
     }
     
@@ -479,8 +474,6 @@ public class Blake_Algorithm {
 
         /* compress remaining data filled with new bits */
         if( left !=0 && ( ((databitlen >> 3) & 0x3F) >= fill ) ) {
-         // memcpy( (void *) (state->data32 + left),
-         //     (void *) data, fill );
             System.arraycopy(data, 0, state.data32, (int)left, (int)(fill));
           /* update counter */
           state.t32[0] += 512;
@@ -488,7 +481,6 @@ public class Blake_Algorithm {
             state.t32[1]++;
             
           compress32(state.data32);
-          //System.arraycopy(data, 0, data, (int)fill, data.length);
           databitlen  -= (fill << 3); 
             
           left = 0;
@@ -503,16 +495,10 @@ public class Blake_Algorithm {
           if (state.t32[0] == 0)
             state.t32[1]++;
           compress32(data);
-          //data += 64;
-          System.arraycopy(data, 0, data, 8, data.length);
           databitlen  -= 512;
         }
         
         if( databitlen > 0 ) {
-          //memcpy( (void *) (state->data32 + left),
-          //    (void *) data, databitlen>>3 );
-        	System.out.println(Arrays.toString(state.data32));
-        	System.out.println(Long.toString(left));
             System.arraycopy(data, 0, state.data32, (int)(left), (int)databitlen>>3);
           state.datalen = (left<<3) + (int)databitlen;
           /* when non-8-multiple, add remaining bits (1 to 7)*/
@@ -540,18 +526,16 @@ public class Blake_Algorithm {
 
         /* compress remaining data filled with new bits */
         if( left!= 0 && ( ((databitlen >> 3) & 0x7F) >= fill ) ) {
-          //memcpy( (void *) (state->data64 + left),
-            //  (void *) data, fill );
+
             System.arraycopy(data, 0, state.data64, (int)left,(int)fill);
           /* update counter  */
          state.t64[0] += 1024;
 
          compress64(state.data64);
-         //data += fill;
-         //System.arraycopy(data, 0, data, (int)fill, data.length);
+
          databitlen  -= (fill << 3); 
             
-          left = 0;
+         left = 0;
         }
 
         /* compress data until enough for a block */
@@ -560,14 +544,10 @@ public class Blake_Algorithm {
           /* update counter */
          state.t64[0] += 1024;
          compress64(data);
-          //data += 128;
-         //System.arraycopy(data, 0, data, 16, data.length);
-          databitlen  -= 1024;
+         databitlen  -= 1024;
         }
 
         if( databitlen > 0 ) {
-          //memcpy( (void *) (state->data64 + left),
-            //  (void *) data, ( databitlen>>3 ) & 0x7F );
             System.arraycopy(data, 0, state.data64, (int)left, (int)(databitlen>>3) & 0x7F);
           state.datalen = (int) ((left<<3) + databitlen);
 
@@ -604,7 +584,6 @@ public class Blake_Algorithm {
         high = state.t32[1];
         if ( low < state.datalen )
           high++;
-        System.out.println(Integer.toHexString((int)high));
         short[] msglen0 = U32TO8_BE((int)high);
         short[] msglen1 = U32TO8_BE((int)low);
         ShortBuffer msg = ShortBuffer.wrap(msglen);
@@ -875,29 +854,22 @@ public class Blake_Algorithm {
     
     private int Hash(int hashbitlen,short[] data, int databitlen){
         int ret;
-        System.out.println(hashbitlen);
         ret = Init(hashbitlen);
         if ( ret != SUCCESS ){
-        	System.out.println("Init");
         	return ret;
         }
         
         ret = Update(data, databitlen);
         if ( ret != SUCCESS ){
-        	System.out.println("Update");
         	return ret;
         }
 
         ret = Final();
-        System.out.println("Final!");
        return ret;
     }
     
     private static int U8TO32_BE(short[] p){
 	    int q = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-	    //System.out.println(Integer.toHexString(p[0]));
-	    //System.out.println(Integer.toHexString(p[1]));
-	    //System.out.println(Integer.toHexString(p[1] << 16));
 	       return q; }	    
     private static long U8TO64_BE(short[] p){
 	 	long q = ((long)(p[0]) << 56) | ((long)p[1] << 48) | ((long)p[2] << 40) | ((long)p[3] << 32) | 
@@ -907,17 +879,11 @@ public class Blake_Algorithm {
     private static short[] U32TO8_BE(int v){
 	    String test;
 	    test = String.format("%08X", v);
-	    System.out.println(test);
     	short [] p=new short[4];
     	p[0] = Short.parseShort(test.substring(0, 2), 16);
     	p[1] = Short.parseShort(test.substring(2, 4), 16);
     	p[2] = Short.parseShort(test.substring(4, 6), 16);
     	p[3] = Short.parseShort(test.substring(6, 8), 16);
-    	//p[0]=(short)((v)>>24);
-        //p[1]=(short)((v)>>16);
-        //p[2]=(short)((v)>>8);
-        //p[3]=(short)((v));
-        //System.out.println(p[1]);
     	return p;
     }
  
