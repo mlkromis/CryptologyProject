@@ -188,8 +188,6 @@ public class Blake_Algorithm {
     //  #define XOR32(x,y)    ((u32)((x) ^ (y)))
 
         /* get message */
-        check = Arrays.copyOfRange(datablock,0,3);
-        System.out.println(Arrays.toString(check));
         m[0] = U8TO32_BE(Arrays.copyOfRange(datablock,0,4));
         m[1] = U8TO32_BE(Arrays.copyOfRange(datablock,4,8));
         m[2] = U8TO32_BE(Arrays.copyOfRange(datablock,8,12));
@@ -266,7 +264,8 @@ public class Blake_Algorithm {
     private long ROT64(long x, int n){
         long y;
         y = x << (64-n);
-        return y | (x >> n);
+        System.out.println(Long.toHexString(x>>>n));
+        return y | (x >>> n);
     }
     
     private long ADD64(long x, long y){
@@ -293,27 +292,27 @@ public class Blake_Algorithm {
     
     private long compress64(short[] data ) {
 
-        long v[] = {0};
-        long m[] = {0};
+        long v[] = new long[16];
+        long m[] = new long[16];
         short round;
 
         /* get message */
-        m[0] = U8TO64_BE(Arrays.copyOfRange(data,0,3));
-        m[1] = U8TO64_BE(Arrays.copyOfRange(data,4,7));
-        m[2] = U8TO64_BE(Arrays.copyOfRange(data,8,11));
-        m[3] = U8TO64_BE(Arrays.copyOfRange(data,12,15));
-        m[4] = U8TO64_BE(Arrays.copyOfRange(data,16,19));
-        m[5] = U8TO64_BE(Arrays.copyOfRange(data,20,23));
-        m[6] = U8TO64_BE(Arrays.copyOfRange(data,24,27));
-        m[7] = U8TO64_BE(Arrays.copyOfRange(data,28,31));
-        m[8] = U8TO64_BE(Arrays.copyOfRange(data,32,35));
-        m[9] = U8TO64_BE(Arrays.copyOfRange(data,36,39));
-        m[10] = U8TO64_BE(Arrays.copyOfRange(data,40,43));
-        m[11] = U8TO64_BE(Arrays.copyOfRange(data,44,47));
-        m[12] = U8TO64_BE(Arrays.copyOfRange(data,48,51));
-        m[13] = U8TO64_BE(Arrays.copyOfRange(data,52,55));
-        m[14] = U8TO64_BE(Arrays.copyOfRange(data,56,59));
-        m[15] = U8TO64_BE(Arrays.copyOfRange(data,60,63));
+        m[0] = U8TO64_BE(Arrays.copyOfRange(data,0,8));
+        m[1] = U8TO64_BE(Arrays.copyOfRange(data,8,16));
+        m[2] = U8TO64_BE(Arrays.copyOfRange(data,16,24));
+        m[3] = U8TO64_BE(Arrays.copyOfRange(data,24,32));
+        m[4] = U8TO64_BE(Arrays.copyOfRange(data,32,40));
+        m[5] = U8TO64_BE(Arrays.copyOfRange(data,40,48));
+        m[6] = U8TO64_BE(Arrays.copyOfRange(data,48,56));
+        m[7] = U8TO64_BE(Arrays.copyOfRange(data,56,64));
+        m[8] = U8TO64_BE(Arrays.copyOfRange(data,64,72));
+        m[9] = U8TO64_BE(Arrays.copyOfRange(data,72,80));
+        m[10] = U8TO64_BE(Arrays.copyOfRange(data,80,88));
+        m[11] = U8TO64_BE(Arrays.copyOfRange(data,88,96));
+        m[12] = U8TO64_BE(Arrays.copyOfRange(data,96,104));
+        m[13] = U8TO64_BE(Arrays.copyOfRange(data,104,112));
+        m[14] = U8TO64_BE(Arrays.copyOfRange(data,112,120));
+        m[15] = U8TO64_BE(Arrays.copyOfRange(data,120,128));
 
         /* initialization */
         v[0] = state.h64[0];
@@ -394,11 +393,7 @@ public class Blake_Algorithm {
             if (hashbitlen == 224) 
                 System.arraycopy(IV224, 0, state.h32, 0, IV224.length);      
               else 
-            	System.out.println("IV256[1]");
-            	System.out.println(Integer.toHexString(IV256[1]));
                 System.arraycopy(IV256, 0, state.h32, 0, IV256.length);
-                System.out.println("state.h32[1]");
-                System.out.println(Integer.toHexString(state.h32[1]));
 
               state.t32[0] = 0;
               state.t32[1] = 0;
@@ -456,15 +451,15 @@ public class Blake_Algorithm {
 
         if ( state.hashbitlen < 384 ) {
           state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
-          state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,4));
-          state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,4));
-          state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,4));
+          state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
+          state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
+          state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
         }
         else {
           state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
-          state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,8));
-          state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,8));
-          state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,8));
+          state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
+          state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
+          state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
         }
 
         return SUCCESS;
@@ -547,13 +542,13 @@ public class Blake_Algorithm {
         if( left!= 0 && ( ((databitlen >> 3) & 0x7F) >= fill ) ) {
           //memcpy( (void *) (state->data64 + left),
             //  (void *) data, fill );
-            System.arraycopy(data, 0, state.data64, (int)left,(int)left + ((int)fill/8));
+            System.arraycopy(data, 0, state.data64, (int)left,(int)fill);
           /* update counter  */
          state.t64[0] += 1024;
 
-         compress64(state.data64 );
+         compress64(state.data64);
          //data += fill;
-         System.arraycopy(data, 0, data, (int)fill/8, data.length);
+         //System.arraycopy(data, 0, data, (int)fill, data.length);
          databitlen  -= (fill << 3); 
             
           left = 0;
@@ -566,7 +561,7 @@ public class Blake_Algorithm {
          state.t64[0] += 1024;
          compress64(data);
           //data += 128;
-         System.arraycopy(data, 0, data, 16, data.length);
+         //System.arraycopy(data, 0, data, 16, data.length);
           databitlen  -= 1024;
         }
 
@@ -736,12 +731,11 @@ public class Blake_Algorithm {
     private int Final64() {
 
 
-        short msglen[] = {0,0};
-        //int zz=0x00,zo=0x01,oz=0x80,oo=0x81;
-        short[] zz={0x0,0x0};
-        short[] zo={0x0,0x1};
-        short[] oz={0x8,0x0};
-        short[] oo={0x8,0x1};
+    	short msglen[] = new short [16];
+        short[] zz={(short)0x00};
+        short[] zo={(short)0x01};
+        short[] oz={(short)0x80};
+        short[] oo={(short)0x81};
         
         /* copy nb. bits hash in total as a 128-bit BE word */
         long low, high;

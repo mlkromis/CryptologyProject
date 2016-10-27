@@ -27,8 +27,12 @@ public class Blake_HashState {
     
     Blake_HashState() {
         this.h32 = new int[8];
-        this.t32 = new int[8];
+        this.t32 = new int[2];
         this.data32 = new short[64];
-        this.salt32 = new int[8];
+        this.salt32 = new int[4];
+        this.h64 = new long[8];
+        this.t64 = new long[2];
+        this.data64 = new short[128];
+        this.salt64 = new long[4];
     }
 }

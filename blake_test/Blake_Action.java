@@ -7,7 +7,7 @@ public class Blake_Action {
 		// TODO Auto-generated method stub
 		short[] hash;
 		short[] data= new short[144];
-		int hashbitlen = 256;
+		int hashbitlen = 384;
 		int databitlen = 8;
 		Arrays.fill(data, (short)0);
 		System.out.println("Hello World!");
