@@ -151,15 +151,15 @@ public class Blake_Algorithm {
     }
     
     private long ROT32(long x, long n){
-        return ((x<<(32-n))|(x>>n));
+        return (((x<<(32-n))|(x>>n))& 0xffffffffL);
     }
     
     private long ADD32(long x, long y){
-        return (x + y);
+        return ((x + y) & 0xffffffffL);
     }
     
     private long XOR32(long x, long y){
-        return (x ^ y);
+        return ((x ^ y) & 0xffffffffL);
     }
     
     private long[] G32(long v[], long m[], short round,
@@ -178,8 +178,9 @@ public class Blake_Algorithm {
     
     private int compress32(short[] datablock){
  
-        long v[] = {0};
-        long m[] = {0};
+        long v[] = new long[16];
+        long m[] = new long[16];
+        short check[] = new short[4];
         short round;
 
     //  #define ROT32(x,n) (((x)<<(32-n))|( (x)>>(n)))
@@ -187,47 +188,49 @@ public class Blake_Algorithm {
     //  #define XOR32(x,y)    ((u32)((x) ^ (y)))
 
         /* get message */
-        m[0] = U8TO32_BE(Arrays.copyOfRange(datablock,0,3));
-        m[1] = U8TO32_BE(Arrays.copyOfRange(datablock,4,7));
-        m[2] = U8TO32_BE(Arrays.copyOfRange(datablock,8,11));
-        m[3] = U8TO32_BE(Arrays.copyOfRange(datablock,12,15));
-        m[4] = U8TO32_BE(Arrays.copyOfRange(datablock,16,19));
-        m[5] = U8TO32_BE(Arrays.copyOfRange(datablock,20,23));
-        m[6] = U8TO32_BE(Arrays.copyOfRange(datablock,24,27));
-        m[7] = U8TO32_BE(Arrays.copyOfRange(datablock,28,31));
-        m[8] = U8TO32_BE(Arrays.copyOfRange(datablock,32,35));
-        m[9] = U8TO32_BE(Arrays.copyOfRange(datablock,36,39));
-        m[10] = U8TO32_BE(Arrays.copyOfRange(datablock,40,43));
-        m[11] = U8TO32_BE(Arrays.copyOfRange(datablock,44,47));
-        m[12] = U8TO32_BE(Arrays.copyOfRange(datablock,48,51));
-        m[13] = U8TO32_BE(Arrays.copyOfRange(datablock,52,55));
-        m[14] = U8TO32_BE(Arrays.copyOfRange(datablock,56,59));
-        m[15] = U8TO32_BE(Arrays.copyOfRange(datablock,60,63));
+        check = Arrays.copyOfRange(datablock,0,3);
+        System.out.println(Arrays.toString(check));
+        m[0] = U8TO32_BE(Arrays.copyOfRange(datablock,0,4));
+        m[1] = U8TO32_BE(Arrays.copyOfRange(datablock,4,8));
+        m[2] = U8TO32_BE(Arrays.copyOfRange(datablock,8,12));
+        m[3] = U8TO32_BE(Arrays.copyOfRange(datablock,12,16));
+        m[4] = U8TO32_BE(Arrays.copyOfRange(datablock,16,20));
+        m[5] = U8TO32_BE(Arrays.copyOfRange(datablock,20,24));
+        m[6] = U8TO32_BE(Arrays.copyOfRange(datablock,24,28));
+        m[7] = U8TO32_BE(Arrays.copyOfRange(datablock,28,32));
+        m[8] = U8TO32_BE(Arrays.copyOfRange(datablock,32,36));
+        m[9] = U8TO32_BE(Arrays.copyOfRange(datablock,36,40));
+        m[10] = U8TO32_BE(Arrays.copyOfRange(datablock,40,44));
+        m[11] = U8TO32_BE(Arrays.copyOfRange(datablock,44,48));
+        m[12] = U8TO32_BE(Arrays.copyOfRange(datablock,48,52));
+        m[13] = U8TO32_BE(Arrays.copyOfRange(datablock,52,56));
+        m[14] = U8TO32_BE(Arrays.copyOfRange(datablock,56,60));
+        m[15] = U8TO32_BE(Arrays.copyOfRange(datablock,60,64));
 
         /* initialization */
-        v[ 0] = state.h32[0];
-        v[ 1] = state.h32[1];
-        v[ 2] = state.h32[2];
-        v[ 3] = state.h32[3];
-        v[ 4] = state.h32[4];
-        v[ 5] = state.h32[5];
-        v[ 6] = state.h32[6];
-        v[ 7] = state.h32[7];
-        v[ 8] = state.salt32[0] ^ c32[0];
-        v[ 9] = state.salt32[1] ^ c32[1];
-        v[10] = state.salt32[2] ^ c32[2];
-        v[11] = state.salt32[3] ^ c32[3];
+        v[ 0] = state.h32[0] & 0xffffffffL;
+        v[ 1] = state.h32[1] & 0xffffffffL;
+        v[ 2] = state.h32[2] & 0xffffffffL;
+        v[ 3] = state.h32[3] & 0xffffffffL;
+        v[ 4] = state.h32[4] & 0xffffffffL;
+        v[ 5] = state.h32[5] & 0xffffffffL;
+        v[ 6] = state.h32[6] & 0xffffffffL;
+        v[ 7] = state.h32[7] & 0xffffffffL;
+        v[ 8] = (state.salt32[0] ^ c32[0]) & 0xffffffffL;
+        v[ 9] = (state.salt32[1] ^ c32[1]) & 0xffffffffL;
+        v[10] = (state.salt32[2] ^ c32[2]) & 0xffffffffL;
+        v[11] = (state.salt32[3] ^ c32[3]) & 0xffffffffL;
         if (state.nullt != 0) { /* special case t=0 for the last block */
-          v[12] =  c32[4];
-          v[13] =  c32[5];
-          v[14] =  c32[6];
-          v[15] =  c32[7];
+          v[12] =  c32[4] & 0xffffffffL;
+          v[13] =  c32[5] & 0xffffffffL;
+          v[14] =  c32[6] & 0xffffffffL;
+          v[15] =  c32[7] & 0xffffffffL;
         }
         else {
-          v[12] = state.t32[0] ^ c32[4];
-          v[13] = state.t32[0] ^ c32[5];
-          v[14] = state.t32[1] ^ c32[6];
-          v[15] = state.t32[1] ^ c32[7];
+          v[12] = (state.t32[0] ^ c32[4]) & 0xffffffffL;
+          v[13] = (state.t32[0] ^ c32[5]) & 0xffffffffL;
+          v[14] = (state.t32[1] ^ c32[6]) & 0xffffffffL;
+          v[15] = (state.t32[1] ^ c32[7]) & 0xffffffffL;
         }
 
         /*  do 14 rounds */
@@ -483,14 +486,14 @@ public class Blake_Algorithm {
         if( left !=0 && ( ((databitlen >> 3) & 0x3F) >= fill ) ) {
          // memcpy( (void *) (state->data32 + left),
          //     (void *) data, fill );
-            System.arraycopy(data, 0, state.data32, (int)left/8, (int)(left/8)+(int)(fill/8));
+            System.arraycopy(data, 0, state.data32, (int)left, (int)(fill));
           /* update counter */
           state.t32[0] += 512;
           if (state.t32[0] == 0)
             state.t32[1]++;
             
           compress32(state.data32);
-          System.arraycopy(data, 0, data, (int)(fill/8), data.length);
+          //System.arraycopy(data, 0, data, (int)fill, data.length);
           databitlen  -= (fill << 3); 
             
           left = 0;
@@ -514,11 +517,12 @@ public class Blake_Algorithm {
           //memcpy( (void *) (state->data32 + left),
           //    (void *) data, databitlen>>3 );
         	System.out.println(Arrays.toString(state.data32));
-            System.arraycopy(data, 0, state.data32, (int)(left/8), (int)databitlen>>3);
+        	System.out.println(Long.toString(left));
+            System.arraycopy(data, 0, state.data32, (int)(left), (int)databitlen>>3);
           state.datalen = (left<<3) + (int)databitlen;
           /* when non-8-multiple, add remaining bits (1 to 7)*/
           if ( (databitlen & 0x7) != 0)
-            state.data32[(int) ((int)(left/8) + (databitlen>>3))] = data[(int) (databitlen>>3)];
+            state.data32[(int) ((int)(left) + (databitlen>>3))] = data[(int) (databitlen>>3)];
         }
         else
           state.datalen=0;
@@ -592,10 +596,10 @@ public class Blake_Algorithm {
     
     private int Final32() {
         short msglen[] = new short [8];
-        short[] zz={0x0,0x0};
-        short[] zo={0x0,0x1};
-        short[] oz={0x8,0x0};
-        short[] oo={0x8,0x1};
+        short[] zz={(short)0x00};
+        short[] zo={(short)0x01};
+        short[] oz={(short)0x80};
+        short[] oo={(short)0x81};
 
         /* 
            copy nb. bits hash in total as a 64-bit BE word
@@ -934,4 +938,3 @@ public class Blake_Algorithm {
     	return p3;  
     }
 }
-

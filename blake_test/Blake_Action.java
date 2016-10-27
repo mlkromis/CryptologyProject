@@ -15,6 +15,11 @@ public class Blake_Action {
 		hash = blake.getHash();
 		System.out.println(Arrays.toString(data));
 		System.out.println(Arrays.toString(hash));
+		final StringBuilder builder = new StringBuilder();
+	    for(short b : hash) {
+	        builder.append(String.format("%02x", b));
+	    }
+	    System.out.println(builder.toString());
 		
 	}
 }
