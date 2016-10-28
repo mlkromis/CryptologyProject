@@ -1,5 +1,6 @@
 package blake;
 
+import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
 import java.util.Arrays;
 
@@ -9,12 +10,12 @@ public class Blake_Algorithm {
     private int BAD_HASHBITLEN=2;
     
     private Blake_HashState state;
-    private short hashval[];
+    private byte hashval[];
     private int status;
     
-    public static final short padding[] =
+    public static final byte padding[] =
         {
-          (short)0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          (byte)0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -123,29 +124,34 @@ public class Blake_Algorithm {
           };
 
     
-    Blake_Algorithm(int hashbitlen, short[] data, int databitlen){
+    Blake_Algorithm(int hashbitlen, byte[] data){
         this.status = FAIL;
-        this.hashval = new short[hashbitlen/8];
+        this.hashval = new byte[hashbitlen/8];
         this.state = new Blake_HashState();
 
-        status = Hash(hashbitlen,data,databitlen);
+        status = Hash(hashbitlen, data, 8);
     }
 
-    Blake_Algorithm(int hashbitlen, short[] data, int databitlen, String salt){
+    Blake_Algorithm(int hashbitlen, byte[] data, String salt){
         this.status = FAIL;
-        this.hashval = new short[hashbitlen/8];
+        this.hashval = new byte[hashbitlen/8];
         this.state = new Blake_HashState();
 
         //AddSalt(hexStrToshortField(salt));
 
-        status = Hash(hashbitlen,data,databitlen);
+        status = Hash(hashbitlen, data, 8);
     }
     
     public int getStatus(){
         return this.status;
     }
 
-    public short[] getHash(){
+    public byte[] getHash(){
+    	StringBuilder tb = new StringBuilder();
+        for (byte b : this.hashval) {
+            tb.append(String.format("%02X ", b));
+        }
+        System.out.println(tb.toString());
         return this.hashval;
     }
     
@@ -175,7 +181,7 @@ public class Blake_Algorithm {
         return v;
       }
     
-    private int compress32(short[] datablock){
+    private int compress32(byte[] datablock){
  
         long v[] = new long[16];
         long m[] = new long[16];
@@ -285,7 +291,7 @@ public class Blake_Algorithm {
       return v;
     }
     
-    private long compress64(short[] data ) {
+    private long compress64(byte[] data ) {
 
         long v[] = new long[16];
         long m[] = new long[16];
@@ -434,7 +440,7 @@ public class Blake_Algorithm {
             return SUCCESS;
     }
     
-    private int AddSalt(short[] salt ) {
+    private int AddSalt(byte[] salt ) {
 
 
         /* if hashbitlen=224 or 256, then the salt should be 128-bit (16 shorts) */
@@ -460,7 +466,7 @@ public class Blake_Algorithm {
         return SUCCESS;
       }
     
-    private int Update32(short[] data, long databitlen ) {
+    private int Update32(byte[] data, long databitlen ) {
 
 
         long fill;
@@ -512,7 +518,7 @@ public class Blake_Algorithm {
         return SUCCESS;
       }
 
-    private int Update64(short[] data, long databitlen ) {
+    private int Update64(byte[] data, long databitlen ) {
 
 
         long fill;
@@ -561,7 +567,7 @@ public class Blake_Algorithm {
         return SUCCESS;
       }
     
-    private int Update(short[] data, int databitlen) {
+    private int Update(byte[] data, int databitlen) {
 
         if ( state.hashbitlen < 384 )
           return Update32(data, databitlen );
@@ -570,11 +576,11 @@ public class Blake_Algorithm {
     }
     
     private int Final32() {
-        short msglen[] = new short [8];
-        short[] zz={(short)0x00};
-        short[] zo={(short)0x01};
-        short[] oz={(short)0x80};
-        short[] oo={(short)0x81};
+        byte msglen[] = new byte [8];
+        byte[] zz={(byte)0x00};
+        byte[] zo={(byte)0x01};
+        byte[] oz={(byte)0x80};
+        byte[] oo={(byte)0x81};
 
         /* 
            copy nb. bits hash in total as a 64-bit BE word
@@ -584,9 +590,9 @@ public class Blake_Algorithm {
         high = state.t32[1];
         if ( low < state.datalen )
           high++;
-        short[] msglen0 = U32TO8_BE((int)high);
-        short[] msglen1 = U32TO8_BE((int)low);
-        ShortBuffer msg = ShortBuffer.wrap(msglen);
+        byte[] msglen0 = U32TO8_BE((int)high);
+        byte[] msglen1 = U32TO8_BE((int)low);
+        ByteBuffer msg = ByteBuffer.wrap(msglen);
         msg.put(msglen0);
         msg.put(msglen1);
 
@@ -682,15 +688,22 @@ public class Blake_Algorithm {
           Update32(msglen, 64L ); 
         }
 
-        short[] hashval0 = U32TO8_BE(state.h32[0]);
-        short[] hashval1 = U32TO8_BE(state.h32[1]);
-        short[] hashval2 = U32TO8_BE(state.h32[2]);
-        short[] hashval3 = U32TO8_BE(state.h32[3]);
-        short[] hashval4 = U32TO8_BE(state.h32[4]);
-        short[] hashval5 = U32TO8_BE(state.h32[5]);
-        short[] hashval6 = U32TO8_BE(state.h32[6]);
+        byte[] hashval0 = U32TO8_BE(state.h32[0]);
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashval0) {
+            sb.append(String.format("%04X ", b));
+        }
+        System.out.println(sb.toString());
+        byte[] hashval1 = U32TO8_BE(state.h32[1]);
+        System.out.println(Arrays.toString(hashval1));
+        byte[] hashval2 = U32TO8_BE(state.h32[2]);
+        System.out.println(Arrays.toString(hashval2));
+        byte[] hashval3 = U32TO8_BE(state.h32[3]);
+        byte[] hashval4 = U32TO8_BE(state.h32[4]);
+        byte[] hashval5 = U32TO8_BE(state.h32[5]);
+        byte[] hashval6 = U32TO8_BE(state.h32[6]);
         
-        ShortBuffer target = ShortBuffer.wrap(hashval);
+        ByteBuffer target = ByteBuffer.wrap(hashval);
         target.put(hashval0);
         target.put(hashval1);
         target.put(hashval2);
@@ -700,21 +713,26 @@ public class Blake_Algorithm {
         target.put(hashval6);
 
         if ( state.hashbitlen == 256 ) {
-          short[] hashval7 = U32TO8_BE(state.h32[7]);
+          byte[] hashval7 = U32TO8_BE(state.h32[7]);
           target.put(hashval7);
         }
         
+        StringBuilder tb = new StringBuilder();
+        for (byte b : hashval) {
+            tb.append(String.format("%04X ", b));
+        }
+        System.out.println(tb.toString());
         return SUCCESS;
     }
     
     private int Final64() {
 
 
-    	short msglen[] = new short [16];
-        short[] zz={(short)0x00};
-        short[] zo={(short)0x01};
-        short[] oz={(short)0x80};
-        short[] oo={(short)0x81};
+    	byte msglen[] = new byte [16];
+        byte[] zz={(byte)0x00};
+        byte[] zo={(byte)0x01};
+        byte[] oz={(byte)0x80};
+        byte[] oo={(byte)0x81};
         
         /* copy nb. bits hash in total as a 128-bit BE word */
         long low, high;
@@ -722,9 +740,9 @@ public class Blake_Algorithm {
         high = state.t64[1];
         if ( low < state.datalen )
           high = high + 1;
-        short[] msglen0 = U64TO8_BE(high);
-        short[] msglen1 = U64TO8_BE(low);
-        ShortBuffer msg = ShortBuffer.wrap(msglen);
+        byte[] msglen0 = U64TO8_BE(high);
+        byte[] msglen1 = U64TO8_BE(low);
+        ByteBuffer msg = ByteBuffer.wrap(msglen);
         msg.put(msglen0);
         msg.put(msglen1);
 
@@ -820,14 +838,14 @@ public class Blake_Algorithm {
           Update(msglen, 128 ); 
         }
 
-        short[] hashval0 = U64TO8_BE(state.h64[0]);
-        short[] hashval1 = U64TO8_BE(state.h64[1]);
-        short[] hashval2 = U64TO8_BE(state.h64[2]);
-        short[] hashval3 = U64TO8_BE(state.h64[3]);
-        short[] hashval4 = U64TO8_BE(state.h64[4]);
-        short[] hashval5 = U64TO8_BE(state.h64[5]);
+        byte[] hashval0 = U64TO8_BE(state.h64[0]);
+        byte[] hashval1 = U64TO8_BE(state.h64[1]);
+        byte[] hashval2 = U64TO8_BE(state.h64[2]);
+        byte[] hashval3 = U64TO8_BE(state.h64[3]);
+        byte[] hashval4 = U64TO8_BE(state.h64[4]);
+        byte[] hashval5 = U64TO8_BE(state.h64[5]);
         
-        ShortBuffer target = ShortBuffer.wrap(hashval);
+        ByteBuffer target = ByteBuffer.wrap(hashval);
         target.put(hashval0);
         target.put(hashval1);
         target.put(hashval2);
@@ -836,8 +854,8 @@ public class Blake_Algorithm {
         target.put(hashval5);
         
         if ( state.hashbitlen == 512 ) {
-        	short[] hashval6 = U64TO8_BE(state.h64[6]);
-        	short[] hashval7 = U64TO8_BE(state.h64[7]);
+        	byte[] hashval6 = U64TO8_BE(state.h64[6]);
+        	byte[] hashval7 = U64TO8_BE(state.h64[7]);
         	target.put(hashval6);
             target.put(hashval7);
         }
@@ -852,7 +870,7 @@ public class Blake_Algorithm {
            return Final64();
     }
     
-    private int Hash(int hashbitlen,short[] data, int databitlen){
+    private int Hash(int hashbitlen,byte[] data, int databitlen){
         int ret;
         ret = Init(hashbitlen);
         if ( ret != SUCCESS ){
@@ -868,33 +886,31 @@ public class Blake_Algorithm {
        return ret;
     }
     
-    private static int U8TO32_BE(short[] p){
-	    int q = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-	       return q; }	    
-    private static long U8TO64_BE(short[] p){
-	 	long q = ((long)(p[0]) << 56) | ((long)p[1] << 48) | ((long)p[2] << 40) | ((long)p[3] << 32) | 
-    			((long)p[4] << 24) | ((long)p[5] << 16) | ((long)p[6] << 8) | (long)p[7];
-	        return q;
+    private static int U8TO32_BE(byte[] p){
+		int q = java.nio.ByteBuffer.wrap(p).getInt();
+		       return q; }	    
+	 private static long U8TO64_BE(byte[] p){
+		 	int int1 = U8TO32_BE(Arrays.copyOfRange(p,0,4));
+		 	int int2 = U8TO32_BE(Arrays.copyOfRange(p,4,8));
+		 	long q = (((long)int1) << 32) | ((long)int2 & 0xffffffffL);
+		        return q;
+		    }
+	 private static byte[] U32TO8_BE(int v){
+		 ByteBuffer b = ByteBuffer.allocate(4);
+		 b.putInt(v);
+		 byte[] p = b.array();
+		 return p;
 	    }
-    private static short[] U32TO8_BE(int v){
-	    String test;
-	    test = String.format("%08X", v);
-    	short [] p=new short[4];
-    	p[0] = Short.parseShort(test.substring(0, 2), 16);
-    	p[1] = Short.parseShort(test.substring(2, 4), 16);
-    	p[2] = Short.parseShort(test.substring(4, 6), 16);
-    	p[3] = Short.parseShort(test.substring(6, 8), 16);
-    	return p;
-    }
- 
-    private static short[] U64TO8_BE(long v){ 
-    	short [] p1=U32TO8_BE((int)((v) >> 32));	
-    	short [] p2=U32TO8_BE((int)((v)));
-    	short [] p3=new short[8];
-    	for(int i=0; i<4; i++) {
-    		Arrays.fill(p3, i, i+1, p1[i]);
-    		Arrays.fill(p3, i+4, i+5, p2[i]);
-    	}
-    	return p3;  
-    }
+	 
+	private static byte[] U64TO8_BE(long v){ 
+	byte [] p1=U32TO8_BE((int)((v) >> 32));	
+	byte [] p2=U32TO8_BE((int)((v)));
+	byte [] p3=new byte[8];
+	for(int i=0; i<4; i++) {
+		Arrays.fill(p3, i, i+1, p1[i]);
+		Arrays.fill(p3, i+4, i+5, p2[i]);
+	}
+	return p3;    
 }
+}
+
