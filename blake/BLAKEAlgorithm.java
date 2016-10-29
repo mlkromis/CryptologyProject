@@ -9,16 +9,12 @@
 // -----END DISCLAIMER-----
 package blake;
 
+import java.nio.ByteBuffer;
+import java.nio.ShortBuffer;
 import java.util.Arrays;
 
-
-/**
-*
-* @author Daniel Finn
-*/
-
 public class BLAKEAlgorithm {
-    private int SUCCESS=0;
+	private int SUCCESS=0;
     private int FAIL=1;
     private int BAD_HASHBITLEN=2;
     
@@ -28,7 +24,14 @@ public class BLAKEAlgorithm {
     
     public static final byte padding[] =
         {
-          (byte)0x80,(byte) 0x00
+          (byte)0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
       };
     
     /*
@@ -69,13 +72,13 @@ public class BLAKEAlgorithm {
     new BigInteger("0x0801F2E2858EFC16"),new BigInteger("0x636920D871574E69")
   };*/
     
-    public static final long IV256[]={
+    public static final int IV256[]={
          0x6A09E667, 0xBB67AE85,
          0x3C6EF372, 0xA54FF53A,
          0x510E527F, 0x9B05688C,
          0x1F83D9AB, 0x5BE0CD19
        };
-    public static final long IV224[]={
+    public static final int IV224[]={
          0xC1059ED8, 0x367CD507,
          0x3070DD17, 0xF70E5939,
          0xFFC00B31, 0x68581511,
@@ -93,19 +96,7 @@ public class BLAKEAlgorithm {
             0x510E527FADE682D1L, 0x9B05688C2B3E6C1FL,
             0x1F83D9ABFB41BD6BL, 0x5BE0CD19137E2179L
           };
-   /* public static final BigInteger IV384[]={
-         new BigInteger("0xCBBB9D5DC1059ED8"), new BigInteger("0x629A292A367CD507"),
-         new BigInteger("0x9159015A3070DD17"), new BigInteger("0x152FECD8F70E5939"),
-         new BigInteger("0x67332667FFC00B31"), new BigInteger("0x8EB44A8768581511"),
-         new BigInteger("0xDB0C2E0D64F98FA7"), new BigInteger("0x47B5481DBEFA4FA4")
-       };*/
-   /* public static final BigInteger IV512[]={
-         new BigInteger("0x6A09E667F3BCC908"), new BigInteger("0xBB67AE8584CAA73B"),
-         new BigInteger("0x3C6EF372FE94F82B"), new BigInteger("0xA54FF53A5F1D36F1"),
-         new BigInteger("0x510E527FADE682D1"), new BigInteger("0x9B05688C2B3E6C1F"),
-         new BigInteger("0x1F83D9ABFB41BD6B"), new BigInteger("0x5BE0CD19137E2179")
-       };
-    */
+    
     private static short sigma[][] = {
             {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 } ,
             { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 } ,
@@ -130,22 +121,36 @@ public class BLAKEAlgorithm {
           };
 
     
-    BLAKEAlgorithm(int hashbitlen, byte[] data){
+    Blake_Algorithm(int hashbitlen, byte[] data){
         this.status = FAIL;
         this.hashval = new byte[hashbitlen/8];
-        this.state = new BLAKEHashState();
+        this.state = new Blake_HashState();
+        
+        if (hashbitlen < 384){
+        	state.salt32[0] = 0;
+            state.salt32[1] = 0;
+            state.salt32[2] = 0;
+            state.salt32[3] = 0;  
+        }
+        else{
+        	state.salt64[0] = 0;
+            state.salt64[1] = 0;
+            state.salt64[2] = 0;
+            state.salt64[3] = 0;  
+        }
 
-        status = Hash(data, hashbitlen);
+        status = Hash(hashbitlen, data, 8);
     }
 
-    BLAKEAlgorithm(int hashbitlen, byte[] data, String salt){
+    Blake_Algorithm(int hashbitlen, byte[] data, String salt){
         this.status = FAIL;
         this.hashval = new byte[hashbitlen/8];
-        this.state = new BLAKEHashState();
+        this.state = new Blake_HashState();
 
-        //AddSalt(hexStrToByteField(salt));
+        AddSalt(hexStrToByteField(salt));
 
-        status = Hash(data, hashbitlen);
+        status = Hash(hashbitlen, data, 8);
+        
     }
     
     public int getStatus(){
@@ -153,22 +158,23 @@ public class BLAKEAlgorithm {
     }
 
     public byte[] getHash(){
+    	StringBuilder tb = new StringBuilder();
         return this.hashval;
     }
     
     private long ROT32(long x, long n){
-        return ((x<<(32-n))|(x>>n));
+        return (((x<<(32-n))|(x>>n))& 0xffffffffL);
     }
     
     private long ADD32(long x, long y){
-        return (x + y);
+        return ((x + y) & 0xffffffffL);
     }
     
     private long XOR32(long x, long y){
-        return (x ^ y);
+        return ((x ^ y) & 0xffffffffL);
     }
     
-    private long[] G32(long v[], long m[], byte round,
+    private long[] G32(long v[], long m[], short round,
                     int a, int b, int c, int d, int i){ 
         v[a] = ADD32(v[a],v[b])+XOR32(m[sigma[round][2*i]], c32[sigma[round][2*i+1]]);
         v[d] = ROT32(XOR32(v[d],v[a]),16);
@@ -184,56 +190,54 @@ public class BLAKEAlgorithm {
     
     private int compress32(byte[] datablock){
  
-        long v[] = {0};
-        long m[] = {0};
-        byte round;
+        long v[] = new long[16];
+        long m[] = new long[16];
+        short check[] = new short[4];
+        short round;
 
-    //  #define ROT32(x,n) (((x)<<(32-n))|( (x)>>(n)))
-    //  #define ADD32(x,y)   ((u32)((x) + (y)))
-    //  #define XOR32(x,y)    ((u32)((x) ^ (y)))
 
         /* get message */
-        m[0] = U8TO32_BE(Arrays.copyOfRange(datablock,0,3));
-        m[1] = U8TO32_BE(Arrays.copyOfRange(datablock,4,7));
-        m[2] = U8TO32_BE(Arrays.copyOfRange(datablock,8,11));
-        m[3] = U8TO32_BE(Arrays.copyOfRange(datablock,12,15));
-        m[4] = U8TO32_BE(Arrays.copyOfRange(datablock,16,19));
-        m[5] = U8TO32_BE(Arrays.copyOfRange(datablock,20,23));
-        m[6] = U8TO32_BE(Arrays.copyOfRange(datablock,24,27));
-        m[7] = U8TO32_BE(Arrays.copyOfRange(datablock,28,31));
-        m[8] = U8TO32_BE(Arrays.copyOfRange(datablock,32,35));
-        m[9] = U8TO32_BE(Arrays.copyOfRange(datablock,36,39));
-        m[10] = U8TO32_BE(Arrays.copyOfRange(datablock,40,43));
-        m[11] = U8TO32_BE(Arrays.copyOfRange(datablock,44,47));
-        m[12] = U8TO32_BE(Arrays.copyOfRange(datablock,48,51));
-        m[13] = U8TO32_BE(Arrays.copyOfRange(datablock,52,55));
-        m[14] = U8TO32_BE(Arrays.copyOfRange(datablock,56,59));
-        m[15] = U8TO32_BE(Arrays.copyOfRange(datablock,60,63));
+        m[0] = U8TO32_BE(Arrays.copyOfRange(datablock,0,4));
+        m[1] = U8TO32_BE(Arrays.copyOfRange(datablock,4,8));
+        m[2] = U8TO32_BE(Arrays.copyOfRange(datablock,8,12));
+        m[3] = U8TO32_BE(Arrays.copyOfRange(datablock,12,16));
+        m[4] = U8TO32_BE(Arrays.copyOfRange(datablock,16,20));
+        m[5] = U8TO32_BE(Arrays.copyOfRange(datablock,20,24));
+        m[6] = U8TO32_BE(Arrays.copyOfRange(datablock,24,28));
+        m[7] = U8TO32_BE(Arrays.copyOfRange(datablock,28,32));
+        m[8] = U8TO32_BE(Arrays.copyOfRange(datablock,32,36));
+        m[9] = U8TO32_BE(Arrays.copyOfRange(datablock,36,40));
+        m[10] = U8TO32_BE(Arrays.copyOfRange(datablock,40,44));
+        m[11] = U8TO32_BE(Arrays.copyOfRange(datablock,44,48));
+        m[12] = U8TO32_BE(Arrays.copyOfRange(datablock,48,52));
+        m[13] = U8TO32_BE(Arrays.copyOfRange(datablock,52,56));
+        m[14] = U8TO32_BE(Arrays.copyOfRange(datablock,56,60));
+        m[15] = U8TO32_BE(Arrays.copyOfRange(datablock,60,64));
 
         /* initialization */
-        v[ 0] = state.h32[0];
-        v[ 1] = state.h32[1];
-        v[ 2] = state.h32[2];
-        v[ 3] = state.h32[3];
-        v[ 4] = state.h32[4];
-        v[ 5] = state.h32[5];
-        v[ 6] = state.h32[6];
-        v[ 7] = state.h32[7];
-        v[ 8] = state.salt32[0] ^ c32[0];
-        v[ 9] = state.salt32[1] ^ c32[1];
-        v[10] = state.salt32[2] ^ c32[2];
-        v[11] = state.salt32[3] ^ c32[3];
+        v[ 0] = state.h32[0] & 0xffffffffL;
+        v[ 1] = state.h32[1] & 0xffffffffL;
+        v[ 2] = state.h32[2] & 0xffffffffL;
+        v[ 3] = state.h32[3] & 0xffffffffL;
+        v[ 4] = state.h32[4] & 0xffffffffL;
+        v[ 5] = state.h32[5] & 0xffffffffL;
+        v[ 6] = state.h32[6] & 0xffffffffL;
+        v[ 7] = state.h32[7] & 0xffffffffL;
+        v[ 8] = (state.salt32[0] ^ c32[0]) & 0xffffffffL;
+        v[ 9] = (state.salt32[1] ^ c32[1]) & 0xffffffffL;
+        v[10] = (state.salt32[2] ^ c32[2]) & 0xffffffffL;
+        v[11] = (state.salt32[3] ^ c32[3]) & 0xffffffffL;
         if (state.nullt != 0) { /* special case t=0 for the last block */
-          v[12] =  c32[4];
-          v[13] =  c32[5];
-          v[14] =  c32[6];
-          v[15] =  c32[7];
+          v[12] =  c32[4] & 0xffffffffL;
+          v[13] =  c32[5] & 0xffffffffL;
+          v[14] =  c32[6] & 0xffffffffL;
+          v[15] =  c32[7] & 0xffffffffL;
         }
         else {
-          v[12] = state.t32[0] ^ c32[4];
-          v[13] = state.t32[0] ^ c32[5];
-          v[14] = state.t32[1] ^ c32[6];
-          v[15] = state.t32[1] ^ c32[7];
+          v[12] = (state.t32[0] ^ c32[4]) & 0xffffffffL;
+          v[13] = (state.t32[0] ^ c32[5]) & 0xffffffffL;
+          v[14] = (state.t32[1] ^ c32[6]) & 0xffffffffL;
+          v[15] = (state.t32[1] ^ c32[7]) & 0xffffffffL;
         }
 
         /*  do 14 rounds */
@@ -269,7 +273,7 @@ public class BLAKEAlgorithm {
     private long ROT64(long x, int n){
         long y;
         y = x << (64-n);
-        return y | (x >> n);
+        return y | (x >>> n);
     }
     
     private long ADD64(long x, long y){
@@ -280,7 +284,7 @@ public class BLAKEAlgorithm {
         return (x ^ y);
     }
     
-    private long[] G64(long v[], long m[], byte round,
+    private long[] G64(long v[], long m[], short round,
             int a, int b, int c, int d, int i){ 
       v[a] = ADD64(v[a],v[b])+XOR64(m[sigma[round][2*i]], c64[sigma[round][2*i+1]]);
       v[d] = ROT64(XOR64(v[d],v[a]),32);
@@ -296,27 +300,27 @@ public class BLAKEAlgorithm {
     
     private long compress64(byte[] data ) {
 
-        long v[] = {0};
-        long m[] = {0};
-        byte round;
+        long v[] = new long[16];
+        long m[] = new long[16];
+        short round;
 
         /* get message */
-        m[0] = U8TO64_BE(Arrays.copyOfRange(data,0,3));
-        m[1] = U8TO64_BE(Arrays.copyOfRange(data,4,7));
-        m[2] = U8TO64_BE(Arrays.copyOfRange(data,8,11));
-        m[3] = U8TO64_BE(Arrays.copyOfRange(data,12,15));
-        m[4] = U8TO64_BE(Arrays.copyOfRange(data,16,19));
-        m[5] = U8TO64_BE(Arrays.copyOfRange(data,20,23));
-        m[6] = U8TO64_BE(Arrays.copyOfRange(data,24,27));
-        m[7] = U8TO64_BE(Arrays.copyOfRange(data,28,31));
-        m[8] = U8TO64_BE(Arrays.copyOfRange(data,32,35));
-        m[9] = U8TO64_BE(Arrays.copyOfRange(data,36,39));
-        m[10] = U8TO64_BE(Arrays.copyOfRange(data,40,43));
-        m[11] = U8TO64_BE(Arrays.copyOfRange(data,44,47));
-        m[12] = U8TO64_BE(Arrays.copyOfRange(data,48,51));
-        m[13] = U8TO64_BE(Arrays.copyOfRange(data,52,55));
-        m[14] = U8TO64_BE(Arrays.copyOfRange(data,56,59));
-        m[15] = U8TO64_BE(Arrays.copyOfRange(data,60,63));
+        m[0] = U8TO64_BE(Arrays.copyOfRange(data,0,8));
+        m[1] = U8TO64_BE(Arrays.copyOfRange(data,8,16));
+        m[2] = U8TO64_BE(Arrays.copyOfRange(data,16,24));
+        m[3] = U8TO64_BE(Arrays.copyOfRange(data,24,32));
+        m[4] = U8TO64_BE(Arrays.copyOfRange(data,32,40));
+        m[5] = U8TO64_BE(Arrays.copyOfRange(data,40,48));
+        m[6] = U8TO64_BE(Arrays.copyOfRange(data,48,56));
+        m[7] = U8TO64_BE(Arrays.copyOfRange(data,56,64));
+        m[8] = U8TO64_BE(Arrays.copyOfRange(data,64,72));
+        m[9] = U8TO64_BE(Arrays.copyOfRange(data,72,80));
+        m[10] = U8TO64_BE(Arrays.copyOfRange(data,80,88));
+        m[11] = U8TO64_BE(Arrays.copyOfRange(data,88,96));
+        m[12] = U8TO64_BE(Arrays.copyOfRange(data,96,104));
+        m[13] = U8TO64_BE(Arrays.copyOfRange(data,104,112));
+        m[14] = U8TO64_BE(Arrays.copyOfRange(data,112,120));
+        m[15] = U8TO64_BE(Arrays.copyOfRange(data,120,128));
 
         /* initialization */
         v[0] = state.h64[0];
@@ -331,10 +335,6 @@ public class BLAKEAlgorithm {
         v[ 9] = state.salt64[1] ^ c64[1];
         v[10] = state.salt64[2] ^ c64[2];
         v[11] = state.salt64[3] ^ c64[3];
-        /*v[8] = c64[0].xor(state.salt64[0]);
-        v[9] = c64[1].xor(state.salt64[1]);
-        v[10] = c64[2].xor(state.salt64[2]);
-        v[11] = c64[3].xor(state.salt64[3]);*/
         if (state.nullt != 0) { 
           v[12] =  c64[4];
           v[13] =  c64[5];
@@ -346,10 +346,6 @@ public class BLAKEAlgorithm {
           v[13] = state.t64[0] ^ c64[5];
           v[14] = state.t64[1] ^ c64[6];
           v[15] = state.t64[1] ^ c64[7];
-          /*v[12] = c64[4].xor(state.salt64[0]);
-          v[13] = c64[5].xor(state.salt64[0]);
-          v[14] = c64[6].xor(state.salt64[1]);
-          v[15] = c64[7].xor(state.salt64[1]);*/
         }  
 
         /*  do 16 rounds */
@@ -377,14 +373,6 @@ public class BLAKEAlgorithm {
         state.h64[5] ^= v[ 5]^v[13]^state.salt64[1];
         state.h64[6] ^= v[ 6]^v[14]^state.salt64[2];
         state.h64[7] ^= v[ 7]^v[15]^state.salt64[3];
-       /* state.h64[0] = state.h64[0].xor(v[ 0].xor(v[ 8].xor(state.salt64[0])));
-        state.h64[1] = state.h64[1].xor(v[ 1].xor(v[ 9].xor(state.salt64[1])));
-        state.h64[2] = state.h64[2].xor(v[ 2].xor(v[10].xor(state.salt64[2])));
-        state.h64[3] = state.h64[3].xor(v[ 3].xor(v[11].xor(state.salt64[3])));
-        state.h64[4] = state.h64[4].xor(v[ 4].xor(v[12].xor(state.salt64[0])));
-        state.h64[5] = state.h64[5].xor(v[ 5].xor(v[13].xor(state.salt64[1])));
-        state.h64[6] = state.h64[6].xor(v[ 6].xor(v[14].xor(state.salt64[2])));
-        state.h64[7] = state.h64[7].xor(v[ 7].xor(v[15].xor(state.salt64[3])));*/
 
         return SUCCESS;
       }
@@ -395,7 +383,7 @@ public class BLAKEAlgorithm {
         if ( (hashbitlen == 224) || (hashbitlen == 256) )  {
             
             if (hashbitlen == 224) 
-                System.arraycopy(IV224, 0, state.h32, 0, IV224.length );      
+                System.arraycopy(IV224, 0, state.h32, 0, IV224.length);      
               else 
                 System.arraycopy(IV256, 0, state.h32, 0, IV256.length);
 
@@ -404,11 +392,6 @@ public class BLAKEAlgorithm {
 
               for(i=0; i<64; ++i)
                 state.data32[i] = 0;
-
-              state.salt32[0] = 0;
-              state.salt32[1] = 0;
-              state.salt32[2] = 0;
-              state.salt32[3] = 0;
                
             }
             else if ( (hashbitlen == 384) || (hashbitlen == 512) ){
@@ -424,13 +407,7 @@ public class BLAKEAlgorithm {
 
               for(i=0; i<64; ++i)
                 state.data64[i] = 0;
-              
-              state.salt64[0] = 0;
-              state.salt64[1] = 0;
-              state.salt64[2] = 0;
-              state.salt64[3] = 0;    
-
-              
+                  
             }
             else
               return BAD_HASHBITLEN;
@@ -445,25 +422,24 @@ public class BLAKEAlgorithm {
     
     private int AddSalt(byte[] salt ) {
 
-
-        /* if hashbitlen=224 or 256, then the salt should be 128-bit (16 bytes) */
-        /* if hashbitlen=384 or 512, then the salt should be 256-bit (32 bytes) */
+        /* if hashbitlen=224 or 256, then the salt should be 128-bit (16 shorts) */
+        /* if hashbitlen=384 or 512, then the salt should be 256-bit (32 shorts) */
 
         /* fail if Init() was not called before */
-        if (state.init != 1) 
+        if (state.init != 0) 
           return FAIL;
 
-        if ( state.hashbitlen < 384 ) {
-          state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
-          state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,4));
-          state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,4));
-          state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,4));
+        if ( state.hashbitlen < 384) {
+        	state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
+        	state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
+        	state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
+        	state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
         }
         else {
-          state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
-          state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,8));
-          state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,8));
-          state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,8));
+        	state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
+        	state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
+        	state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
+        	state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
         }
 
         return SUCCESS;
@@ -483,16 +459,13 @@ public class BLAKEAlgorithm {
 
         /* compress remaining data filled with new bits */
         if( left !=0 && ( ((databitlen >> 3) & 0x3F) >= fill ) ) {
-         // memcpy( (void *) (state->data32 + left),
-         //     (void *) data, fill );
-            System.arraycopy(data, 0, state.data32, (int)left, (int)left+((int)fill/8));
+            System.arraycopy(data, 0, state.data32, (int)left, (int)(fill));
           /* update counter */
           state.t32[0] += 512;
           if (state.t32[0] == 0)
             state.t32[1]++;
             
           compress32(state.data32);
-          System.arraycopy(data, 0, data, (int)fill/8, data.length);
           databitlen  -= (fill << 3); 
             
           left = 0;
@@ -507,19 +480,15 @@ public class BLAKEAlgorithm {
           if (state.t32[0] == 0)
             state.t32[1]++;
           compress32(data);
-          //data += 64;
-          System.arraycopy(data, 0, data, 8, data.length);
           databitlen  -= 512;
         }
         
         if( databitlen > 0 ) {
-          //memcpy( (void *) (state->data32 + left),
-          //    (void *) data, databitlen>>3 );
-            System.arraycopy(data, 0, state.data32, (int)left, (int)databitlen>>3);
+            System.arraycopy(data, 0, state.data32, (int)(left), (int)databitlen>>3);
           state.datalen = (left<<3) + (int)databitlen;
           /* when non-8-multiple, add remaining bits (1 to 7)*/
           if ( (databitlen & 0x7) != 0)
-            state.data32[(int) (left + (databitlen>>3))] = data[(int) (databitlen>>3)];
+            state.data32[(int) ((int)(left) + (databitlen>>3))] = data[(int) (databitlen>>3)];
         }
         else
           state.datalen=0;
@@ -542,18 +511,16 @@ public class BLAKEAlgorithm {
 
         /* compress remaining data filled with new bits */
         if( left!= 0 && ( ((databitlen >> 3) & 0x7F) >= fill ) ) {
-          //memcpy( (void *) (state->data64 + left),
-            //  (void *) data, fill );
-            System.arraycopy(data, 0, state.data64, (int)left,(int)left + ((int)fill/8));
+
+            System.arraycopy(data, 0, state.data64, (int)left,(int)fill);
           /* update counter  */
          state.t64[0] += 1024;
 
-         compress64(state.data64 );
-         //data += fill;
-         System.arraycopy(data, 0, data, (int)fill/8, data.length);
+         compress64(state.data64);
+
          databitlen  -= (fill << 3); 
             
-          left = 0;
+         left = 0;
         }
 
         /* compress data until enough for a block */
@@ -562,14 +529,10 @@ public class BLAKEAlgorithm {
           /* update counter */
          state.t64[0] += 1024;
          compress64(data);
-          //data += 128;
-         System.arraycopy(data, 0, data, 16, data.length);
-          databitlen  -= 1024;
+         databitlen  -= 1024;
         }
 
         if( databitlen > 0 ) {
-          //memcpy( (void *) (state->data64 + left),
-            //  (void *) data, ( databitlen>>3 ) & 0x7F );
             System.arraycopy(data, 0, state.data64, (int)left, (int)(databitlen>>3) & 0x7F);
           state.datalen = (int) ((left<<3) + databitlen);
 
@@ -592,11 +555,11 @@ public class BLAKEAlgorithm {
     }
     
     private int Final32() {
-        byte msglen[] = {0,0};
-        byte[] zz={0x0,0x0};
-        byte[] zo={0x0,0x1};
-        byte[] oz={0x8,0x0};
-        byte[] oo={0x8,0x1};
+        byte msglen[] = new byte [8];
+        byte[] zz={(byte)0x00};
+        byte[] zo={(byte)0x01};
+        byte[] oz={(byte)0x80};
+        byte[] oo={(byte)0x81};
 
         /* 
            copy nb. bits hash in total as a 64-bit BE word
@@ -606,14 +569,17 @@ public class BLAKEAlgorithm {
         high = state.t32[1];
         if ( low < state.datalen )
           high++;
-        msglen[0] = U32TO8_BE(high);
-        msglen[1] = U32TO8_BE(low);
+        byte[] msglen0 = U32TO8_BE((int)high);
+        byte[] msglen1 = U32TO8_BE((int)low);
+        ByteBuffer msg = ByteBuffer.wrap(msglen);
+        msg.put(msglen0);
+        msg.put(msglen1);
 
         if ( state.datalen % 8 == 0) {
           /* message bitlength multiple of 8 */
 
           if ( state.datalen == 440 ) {
-            /* special case of one padding byte */
+            /* special case of one padding short */
             state.t32[0] -= 8;
             if ( state.hashbitlen == 224 ) 
           Update32(oz, 8 );
@@ -654,7 +620,7 @@ public class BLAKEAlgorithm {
           state.data32[(int) (state.datalen/8)] ^= (0x80 >> (state.datalen%8)); 
 
           if (( state.datalen > 440 ) && ( state.datalen < 447 )) {
-            /*  special case of one padding byte */
+            /*  special case of one padding short */
             if ( state.hashbitlen == 224 ) 
           state.data32[(int) (state.datalen/8)] ^= 0x00;
             else
@@ -701,30 +667,40 @@ public class BLAKEAlgorithm {
           Update32(msglen, 64L ); 
         }
 
-        hashval[0] = U32TO8_BE(state.h32[0]);
-        hashval[1] = U32TO8_BE(state.h32[1]);
-        hashval[2] = U32TO8_BE(state.h32[2]);
-        hashval[3] =  U32TO8_BE(state.h32[3]);
-        hashval[4] = U32TO8_BE(state.h32[4]);
-        hashval[5] = U32TO8_BE(state.h32[5]);
-        hashval[6] = U32TO8_BE(state.h32[6]);
+        byte[] hashval0 = U32TO8_BE(state.h32[0]);
+        byte[] hashval1 = U32TO8_BE(state.h32[1]);
+        byte[] hashval2 = U32TO8_BE(state.h32[2]);
+        byte[] hashval3 = U32TO8_BE(state.h32[3]);
+        byte[] hashval4 = U32TO8_BE(state.h32[4]);
+        byte[] hashval5 = U32TO8_BE(state.h32[5]);
+        byte[] hashval6 = U32TO8_BE(state.h32[6]);
+        
+        ByteBuffer target = ByteBuffer.wrap(hashval);
+        target.put(hashval0);
+        target.put(hashval1);
+        target.put(hashval2);
+        target.put(hashval3);
+        target.put(hashval4);
+        target.put(hashval5);
+        target.put(hashval6);
 
         if ( state.hashbitlen == 256 ) {
-          hashval[7] = U32TO8_BE(state.h32[7]);
+          byte[] hashval7 = U32TO8_BE(state.h32[7]);
+          target.put(hashval7);
         }
         
+        StringBuilder tb = new StringBuilder();
         return SUCCESS;
     }
     
     private int Final64() {
 
 
-        byte msglen[] = {0,0};
-        //int zz=0x00,zo=0x01,oz=0x80,oo=0x81;
-        byte[] zz={0x0,0x0};
-        byte[] zo={0x0,0x1};
-        byte[] oz={0x8,0x0};
-        byte[] oo={0x8,0x1};
+    	byte msglen[] = new byte [16];
+        byte[] zz={(byte)0x00};
+        byte[] zo={(byte)0x01};
+        byte[] oz={(byte)0x80};
+        byte[] oo={(byte)0x81};
         
         /* copy nb. bits hash in total as a 128-bit BE word */
         long low, high;
@@ -732,14 +708,17 @@ public class BLAKEAlgorithm {
         high = state.t64[1];
         if ( low < state.datalen )
           high = high + 1;
-        msglen[0] = U64TO8_BE(high);
-        msglen[1] = U64TO8_BE(low);
+        byte[] msglen0 = U64TO8_BE(high);
+        byte[] msglen1 = U64TO8_BE(low);
+        ByteBuffer msg = ByteBuffer.wrap(msglen);
+        msg.put(msglen0);
+        msg.put(msglen1);
 
         if ( state.datalen % 8 == 0) {
           /* message bitlength multiple of 8 */
 
           if ( state.datalen == 888 ) {
-            /* special case of one padding byte */
+            /* special case of one padding short */
             state.t64[0] -= 8; 
             if ( state.hashbitlen == 384 ) 
           Update64(oz, 8 );
@@ -780,7 +759,7 @@ public class BLAKEAlgorithm {
           state.data64[(int) (state.datalen/8)] ^= (0x80 >> (state.datalen%8)); 
 
           if (( state.datalen > 888 ) && ( state.datalen < 895 )) {
-            /*  special case of one padding byte */
+            /*  special case of one padding short */
             if ( state.hashbitlen == 384 ) 
           state.data64[(int) (state.datalen/8)] ^= 0x00;
             else
@@ -827,56 +806,93 @@ public class BLAKEAlgorithm {
           Update(msglen, 128 ); 
         }
 
-        hashval[0] = U64TO8_BE(state.h64[0]);
-        hashval[1] = U64TO8_BE(state.h64[1]);
-        hashval[2] = U64TO8_BE(state.h64[2]);
-        hashval[3] = U64TO8_BE(state.h64[3]);
-        hashval[4] = U64TO8_BE(state.h64[4]);
-        hashval[5] = U64TO8_BE(state.h64[5]);
-
+        byte[] hashval0 = U64TO8_BE(state.h64[0]);
+        byte[] hashval1 = U64TO8_BE(state.h64[1]);
+        byte[] hashval2 = U64TO8_BE(state.h64[2]);
+        byte[] hashval3 = U64TO8_BE(state.h64[3]);
+        byte[] hashval4 = U64TO8_BE(state.h64[4]);
+        byte[] hashval5 = U64TO8_BE(state.h64[5]);
+        
+        ByteBuffer target = ByteBuffer.wrap(hashval);
+        target.put(hashval0);
+        target.put(hashval1);
+        target.put(hashval2);
+        target.put(hashval3);
+        target.put(hashval4);
+        target.put(hashval5);
+        
         if ( state.hashbitlen == 512 ) {
-          hashval[6] = U64TO8_BE(state.h64[6]);
-          hashval[7] = U64TO8_BE(state.h64[7]);
+        	byte[] hashval6 = U64TO8_BE(state.h64[6]);
+        	byte[] hashval7 = U64TO8_BE(state.h64[7]);
+        	target.put(hashval6);
+            target.put(hashval7);
         }
         
         return SUCCESS;
       }
     
     private int Final(){
-        if ( state.hashbitlen < 384 )
+        if (state.hashbitlen < 384 )
             return Final32();
         else
            return Final64();
     }
     
-    private int Hash(byte[] data, int databitlen){
+    private int Hash(int hashbitlen,byte[] data, int databitlen){
         int ret;
-
-        ret = Init(state.hashbitlen );
-        if ( ret != SUCCESS ) return ret;
-
+        ret = Init(hashbitlen);
+        if ( ret != SUCCESS ){
+        	return ret;
+        }
+        
         ret = Update(data, databitlen);
-        if ( ret != SUCCESS ) return ret;
+        if ( ret != SUCCESS ){
+        	return ret;
+        }
 
         ret = Final();
-
        return ret;
     }
     
-    private int U8TO32_BE(byte[] datablock){
-    int q = (datablock[0] << 24) | (datablock[1] << 16) | (datablock[2] << 8) | datablock[3];
-       return q; 
-    }
-    
-    private int U8TO64_BE(byte[] bs){
-        return 0;
-    }
-    
-    private byte U32TO8_BE(long high){
-        return 0;
-    }
-    
-    private byte U64TO8_BE(long h64){
-        return 0;
+    private static int U8TO32_BE(byte[] p){
+		int q = java.nio.ByteBuffer.wrap(p).getInt();
+		       return q; }	    
+	 private static long U8TO64_BE(byte[] p){
+		 	int int1 = U8TO32_BE(Arrays.copyOfRange(p,0,4));
+		 	int int2 = U8TO32_BE(Arrays.copyOfRange(p,4,8));
+		 	long q = (((long)int1) << 32) | ((long)int2 & 0xffffffffL);
+		        return q;
+		    }
+	 private static byte[] U32TO8_BE(int v){
+		 ByteBuffer b = ByteBuffer.allocate(4);
+		 b.putInt(v);
+		 byte[] p = b.array();
+		 return p;
+	    }
+	 
+	private static byte[] U64TO8_BE(long v){ 
+	byte [] p1=U32TO8_BE((int)((v) >> 32));	
+	byte [] p2=U32TO8_BE((int)((v)));
+	byte [] p3=new byte[8];
+	for(int i=0; i<4; i++) {
+		Arrays.fill(p3, i, i+1, p1[i]);
+		Arrays.fill(p3, i+4, i+5, p2[i]);
+	}
+	return p3;    
+	}
+	private byte[] hexStrToByteField(String hexStr){
+        if(hexStr.length()%2==0){
+            byte [] bytes = new byte[hexStr.length()/2];
+            int i,j;
+
+            try{
+                for(i=0,j=0;j<hexStr.length();i++, j+=2)
+                       bytes[i] = (byte)Integer.parseInt(hexStr.substring(j,j+2), 16);
+            }catch(Exception e){
+                return null;
+            }
+            return bytes;
+        }else
+            return null;
     }
 }
