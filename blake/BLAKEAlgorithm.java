@@ -14,11 +14,11 @@ import java.nio.ShortBuffer;
 import java.util.Arrays;
 
 public class BLAKEAlgorithm {
-	private int SUCCESS=0;
+    private int SUCCESS=0;
     private int FAIL=1;
     private int BAD_HASHBITLEN=2;
     
-    private BLAKEHashState state;
+    private Blake_HashState state;
     private byte hashval[];
     private int status;
     
@@ -430,16 +430,32 @@ public class BLAKEAlgorithm {
           return FAIL;
 
         if ( state.hashbitlen < 384) {
-        	state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
-        	state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
-        	state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
-        	state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
+        	if (salt.length >= 16){
+        		state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
+        		state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
+        		state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
+        		state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
+        	}
+        	else{
+        		state.salt32[0] = 0;
+                state.salt32[1] = 0;
+                state.salt32[2] = 0;
+                state.salt32[3] = 0; 
+        	}
         }
         else {
-        	state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
-        	state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
-        	state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
-        	state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
+        	if(salt.length >= 32){
+        		state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
+        		state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
+        		state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
+        		state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
+        	}
+        	else{
+        		state.salt64[0] = 0;
+                state.salt64[1] = 0;
+                state.salt64[2] = 0;
+                state.salt64[3] = 0; 
+        	}
         }
 
         return SUCCESS;
@@ -896,3 +912,4 @@ public class BLAKEAlgorithm {
             return null;
     }
 }
+
