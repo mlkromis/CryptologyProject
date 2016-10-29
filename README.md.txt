@@ -12,10 +12,10 @@ The submitted materials of the candidates can all be found on this website.
          version="0.0.0"
          unpack="false"/>
 
-Then put org.jcryptool.visual.SHA3_0.9.9.jar in the directory $JCrypToolPATH\dropins\. $JCrypToolPATH is the path where you installed JCryptool.
+Then put org.jcryptool.visual.SHA3_0.9.9.jar into the directory $JCrypToolPATH\dropins\. $JCrypToolPATH is the main path of your JCryptool.
 
-Launch JCryptool through eclipse, click the "Visual" in the menu, and click in "SHA3 Candidates". 
-It looks like dialogue rather than visualization. But it's modified from official hashing visualization plug-in. By now only Echo and Keccak have been finished. And I'm working on other candidates and trying to make the visualization cooler.
+Launch JCryptool in eclipse, click the "Visual" in the menu, and click in "SHA3 Candidates". 
+I know it looks like dialogues rather than visualization. But it's modified from official hashing visualization plug-in. By now only Echo and Keccak have been finished. And I'm working on other candidates and trying to make the visualization look cooler.
 
 I'll update the jar file in the future. If you're interested in what's going on, all you need to do is to move the newest jar file into $JCrypToolPATH\dropins\, launch jcryptool and check it out. 
    
