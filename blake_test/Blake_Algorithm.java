@@ -128,6 +128,19 @@ public class Blake_Algorithm {
         this.status = FAIL;
         this.hashval = new byte[hashbitlen/8];
         this.state = new Blake_HashState();
+        
+        if (hashbitlen < 384){
+        	state.salt32[0] = 0;
+            state.salt32[1] = 0;
+            state.salt32[2] = 0;
+            state.salt32[3] = 0;  
+        }
+        else{
+        	state.salt64[0] = 0;
+            state.salt64[1] = 0;
+            state.salt64[2] = 0;
+            state.salt64[3] = 0;  
+        }
 
         status = Hash(hashbitlen, data, 8);
     }
@@ -137,9 +150,10 @@ public class Blake_Algorithm {
         this.hashval = new byte[hashbitlen/8];
         this.state = new Blake_HashState();
 
-        //AddSalt(hexStrToshortField(salt));
+        AddSalt(hexStrToByteField(salt));
 
         status = Hash(hashbitlen, data, 8);
+        
     }
     
     public int getStatus(){
@@ -148,10 +162,6 @@ public class Blake_Algorithm {
 
     public byte[] getHash(){
     	StringBuilder tb = new StringBuilder();
-        for (byte b : this.hashval) {
-            tb.append(String.format("%02X ", b));
-        }
-        System.out.println(tb.toString());
         return this.hashval;
     }
     
@@ -328,10 +338,6 @@ public class Blake_Algorithm {
         v[ 9] = state.salt64[1] ^ c64[1];
         v[10] = state.salt64[2] ^ c64[2];
         v[11] = state.salt64[3] ^ c64[3];
-        /*v[8] = c64[0].xor(state.salt64[0]);
-        v[9] = c64[1].xor(state.salt64[1]);
-        v[10] = c64[2].xor(state.salt64[2]);
-        v[11] = c64[3].xor(state.salt64[3]);*/
         if (state.nullt != 0) { 
           v[12] =  c64[4];
           v[13] =  c64[5];
@@ -343,10 +349,6 @@ public class Blake_Algorithm {
           v[13] = state.t64[0] ^ c64[5];
           v[14] = state.t64[1] ^ c64[6];
           v[15] = state.t64[1] ^ c64[7];
-          /*v[12] = c64[4].xor(state.salt64[0]);
-          v[13] = c64[5].xor(state.salt64[0]);
-          v[14] = c64[6].xor(state.salt64[1]);
-          v[15] = c64[7].xor(state.salt64[1]);*/
         }  
 
         /*  do 16 rounds */
@@ -374,14 +376,6 @@ public class Blake_Algorithm {
         state.h64[5] ^= v[ 5]^v[13]^state.salt64[1];
         state.h64[6] ^= v[ 6]^v[14]^state.salt64[2];
         state.h64[7] ^= v[ 7]^v[15]^state.salt64[3];
-       /* state.h64[0] = state.h64[0].xor(v[ 0].xor(v[ 8].xor(state.salt64[0])));
-        state.h64[1] = state.h64[1].xor(v[ 1].xor(v[ 9].xor(state.salt64[1])));
-        state.h64[2] = state.h64[2].xor(v[ 2].xor(v[10].xor(state.salt64[2])));
-        state.h64[3] = state.h64[3].xor(v[ 3].xor(v[11].xor(state.salt64[3])));
-        state.h64[4] = state.h64[4].xor(v[ 4].xor(v[12].xor(state.salt64[0])));
-        state.h64[5] = state.h64[5].xor(v[ 5].xor(v[13].xor(state.salt64[1])));
-        state.h64[6] = state.h64[6].xor(v[ 6].xor(v[14].xor(state.salt64[2])));
-        state.h64[7] = state.h64[7].xor(v[ 7].xor(v[15].xor(state.salt64[3])));*/
 
         return SUCCESS;
       }
@@ -401,11 +395,6 @@ public class Blake_Algorithm {
 
               for(i=0; i<64; ++i)
                 state.data32[i] = 0;
-
-              state.salt32[0] = 0;
-              state.salt32[1] = 0;
-              state.salt32[2] = 0;
-              state.salt32[3] = 0;
                
             }
             else if ( (hashbitlen == 384) || (hashbitlen == 512) ){
@@ -421,13 +410,7 @@ public class Blake_Algorithm {
 
               for(i=0; i<64; ++i)
                 state.data64[i] = 0;
-              
-              state.salt64[0] = 0;
-              state.salt64[1] = 0;
-              state.salt64[2] = 0;
-              state.salt64[3] = 0;    
-
-              
+                  
             }
             else
               return BAD_HASHBITLEN;
@@ -442,25 +425,24 @@ public class Blake_Algorithm {
     
     private int AddSalt(byte[] salt ) {
 
-
         /* if hashbitlen=224 or 256, then the salt should be 128-bit (16 shorts) */
         /* if hashbitlen=384 or 512, then the salt should be 256-bit (32 shorts) */
 
         /* fail if Init() was not called before */
-        if (state.init != 1) 
+        if (state.init != 0) 
           return FAIL;
 
-        if ( state.hashbitlen < 384 ) {
-          state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
-          state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
-          state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
-          state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
+        if ( state.hashbitlen < 384) {
+        	state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
+        	state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
+        	state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
+        	state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
         }
         else {
-          state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
-          state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
-          state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
-          state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
+        	state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
+        	state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
+        	state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
+        	state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
         }
 
         return SUCCESS;
@@ -689,15 +671,8 @@ public class Blake_Algorithm {
         }
 
         byte[] hashval0 = U32TO8_BE(state.h32[0]);
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashval0) {
-            sb.append(String.format("%04X ", b));
-        }
-        System.out.println(sb.toString());
         byte[] hashval1 = U32TO8_BE(state.h32[1]);
-        System.out.println(Arrays.toString(hashval1));
         byte[] hashval2 = U32TO8_BE(state.h32[2]);
-        System.out.println(Arrays.toString(hashval2));
         byte[] hashval3 = U32TO8_BE(state.h32[3]);
         byte[] hashval4 = U32TO8_BE(state.h32[4]);
         byte[] hashval5 = U32TO8_BE(state.h32[5]);
@@ -718,10 +693,6 @@ public class Blake_Algorithm {
         }
         
         StringBuilder tb = new StringBuilder();
-        for (byte b : hashval) {
-            tb.append(String.format("%04X ", b));
-        }
-        System.out.println(tb.toString());
         return SUCCESS;
     }
     
@@ -911,6 +882,20 @@ public class Blake_Algorithm {
 		Arrays.fill(p3, i+4, i+5, p2[i]);
 	}
 	return p3;    
-}
-}
+	}
+	private byte[] hexStrToByteField(String hexStr){
+        if(hexStr.length()%2==0){
+            byte [] bytes = new byte[hexStr.length()/2];
+            int i,j;
 
+            try{
+                for(i=0,j=0;j<hexStr.length();i++, j+=2)
+                       bytes[i] = (byte)Integer.parseInt(hexStr.substring(j,j+2), 16);
+            }catch(Exception e){
+                return null;
+            }
+            return bytes;
+        }else
+            return null;
+    }
+}

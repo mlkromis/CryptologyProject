@@ -4,15 +4,15 @@ import java.util.Arrays;
 
 public class Blake_Action {
 	public static void main(String[] args) {
-		short[] hash;
-		short[] data= new short[144];
-		int hashbitlen = 384;
-		int databitlen = 8;
-		Arrays.fill(data, (short)0);
-		Blake_Algorithm blake = new Blake_Algorithm(hashbitlen, data, databitlen);
+		byte[] hash;
+		byte[] data= new byte[144];
+		int hashbitlen = 256;
+		String salt = "af23456789ab3465af23456789ab3465";
+		Arrays.fill(data, (byte)0);
+		Blake_Algorithm blake = new Blake_Algorithm(hashbitlen, data, salt);
 		hash = blake.getHash();
 		final StringBuilder builder = new StringBuilder();
-	    for(short b : hash) {
+	    for(byte b : hash) {
 	        builder.append(String.format("%02x", b));
 	    }
 	    System.out.println(builder.toString());
