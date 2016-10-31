@@ -71,6 +71,8 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     private String SaltEcho = "";    
     
     private Group AlgorithmGroup;
+    private Text EchoName;
+    private Text EchoNone;
     private Button EchoHash;
     private Text EchoOutput;
     private Button JHHash;
@@ -316,6 +318,8 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     private void createAlgorithmGroup(Composite parent) {
         GridLayout AlgorithmGroupGridLayout = new GridLayout();
         AlgorithmGroupGridLayout.numColumns =2;
+        AlgorithmGroupGridLayout.makeColumnsEqualWidth = false;
+        
 
         GridData AlgorithmGroupGridData = new GridData();
         AlgorithmGroupGridData.horizontalAlignment = GridData.FILL;
@@ -333,16 +337,16 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         EchoButton.grabExcessHorizontalSpace = true;
         EchoButton.grabExcessVerticalSpace = true;
         EchoButton.verticalAlignment = GridData.FILL;
+        EchoButton.widthHint = 200;
 
         EchoHash = new Button(AlgorithmGroup, SWT.CHECK);
         EchoHash.setText(Messages.WizardMessage14);
         EchoHash.setLayoutData(EchoButton);
         EchoHash.addListener(SWT.Selection, this);
         
-        
         GridData EchoText = new GridData();
         EchoText.horizontalAlignment = GridData.FILL;
-        EchoText.grabExcessHorizontalSpace = false;
+        EchoText.grabExcessHorizontalSpace = true;
         EchoText.grabExcessVerticalSpace = true;
         EchoText.verticalAlignment = GridData.FILL;
         
@@ -352,13 +356,13 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         EchoOutput.setText(tempEcho);
         EchoOutput.addListener(SWT.Modify, this);
         EchoOutput.setVisible(true);
-        
 
         GridData JHButton = new GridData();
         JHButton.horizontalAlignment = GridData.FILL;
         JHButton.grabExcessHorizontalSpace = true;
         JHButton.grabExcessVerticalSpace = true;
         JHButton.verticalAlignment = GridData.FILL;
+        JHButton.widthHint = 200;
 
         JHHash = new Button(AlgorithmGroup, SWT.CHECK);
         JHHash.setText(Messages.WizardMessage15);
@@ -385,6 +389,7 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         SkeinButton.grabExcessHorizontalSpace = true;
         SkeinButton.grabExcessVerticalSpace = true;
         SkeinButton.verticalAlignment = GridData.FILL;
+        SkeinButton.widthHint = 200;
 
         SkeinHash = new Button(AlgorithmGroup, SWT.CHECK);
         SkeinHash.setText(Messages.WizardMessage16);
@@ -785,3 +790,7 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         }
         return sb.toString();
     }
+    
+    
+    
+}
