@@ -9,7 +9,6 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jcryptool.visual.sha3candidates.algorithms.ECHOAction;
 import org.bouncycastle.crypto.digests.GOST3411Digest;
 import org.bouncycastle.crypto.digests.MD2Digest;
 import org.bouncycastle.crypto.digests.MD4Digest;
@@ -53,7 +52,9 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import org.jcryptool.core.logging.utils.LogUtil;
 import org.jcryptool.visual.sha3candidates.HashingPlugin;
 import org.jcryptool.visual.sha3candidates.algorithms.HashFunction;
-
+import org.jcryptool.visual.sha3candidates.algorithms.ECHO.ECHOAction;
+import org.jcryptool.visual.sha3candidates.algorithms.JH.JHAction;
+import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.BLAKEAction;
 /**
  * 
  * @author Ferit Dogan
@@ -180,6 +181,8 @@ public class HashingView extends ViewPart {
 		comboHash
 				.setItems(new String[] {
 						"ECHO (224 bits)", "ECHO (256 bits)", "ECHO (384 bits)", "ECHO (512 bits)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+						"JH (224 bits)", "JH (256 bits)", "JH (384 bits)", "JH (512 bits)",
+						"BLAKE (224 bits)", "BLAKE (256 bits)", "BLAKE (384 bits)", "BLAKE (512 bits)",
 						"SHA-2 (256 bits)", "SHA-2 (512 bits)", "SHA-3 (224 bits)", "SHA-3 (256 bits)", "SHA-3 (384 bits)", "SHA-3 (512 bits)", "SKEIN-256 (256 bits)", "SKEIN-512 (512 bits)", "SKEIN-1024 (1024 bits)", "SM3 (256 bits)", "RIPEMD-160 (160 bits)", "TIGER (192 bits)", "GOST3411 (256 bits)", "WHIRLPOOL (512 bits)" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$
 		comboHash.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		comboHash.select(0);
@@ -467,6 +470,26 @@ public class HashingView extends ViewPart {
 			result = String.format("%256s", result).replace(' ', '0'); //$NON-NLS-1$
 		case ECHO384:
 			result = String.format("%384s", result).replace(' ', '0'); //$NON-NLS-1$
+		case ECHO512:
+			result = String.format("%512s", result).replace(' ', '0'); //$NON-NLS-1$
+			break;
+		case JH224:
+			result = String.format("%224s", result).replace(' ', '0'); //$NON-NLS-1$
+		case JH256:
+			result = String.format("%256s", result).replace(' ', '0'); //$NON-NLS-1$
+		case JH384:
+			result = String.format("%384s", result).replace(' ', '0'); //$NON-NLS-1$
+		case JH512:
+			result = String.format("%512s", result).replace(' ', '0'); //$NON-NLS-1$
+			break;
+		case BLAKE224:
+			result = String.format("%224s", result).replace(' ', '0'); //$NON-NLS-1$
+		case BLAKE256:
+			result = String.format("%256s", result).replace(' ', '0'); //$NON-NLS-1$
+		case BLAKE384:
+			result = String.format("%384s", result).replace(' ', '0'); //$NON-NLS-1$
+		case BLAKE512:
+			result = String.format("%512s", result).replace(' ', '0'); //$NON-NLS-1$
 			break;
 		case RIPEMD160:
 			result = String.format("%160s", result).replace(' ', '0'); //$NON-NLS-1$
@@ -548,6 +571,42 @@ public class HashingView extends ViewPart {
 		case ECHO512:
 			ECHOAction echo512= new ECHOAction();
 			digest=echo512.run(512, inputText);
+			break;
+		case JH224:
+			JHAction JH224 = new JHAction();
+			digest=JH224.run(224, inputText);
+			break;
+		case JH256:
+			JHAction JH256 = new JHAction();
+			digest=JH256.run(256, inputText);
+			break;
+
+		case JH384:
+			JHAction JH384 = new JHAction();
+			digest=JH384.run(384, inputText);
+			break;
+
+		case JH512:
+			JHAction JH512= new JHAction();
+			digest=JH512.run(512, inputText);
+			break;
+		case BLAKE224:
+			BLAKEAction BLAKE224 = new BLAKEAction();
+			digest=BLAKE224.run(224, inputText);
+			break;
+		case BLAKE256:
+			BLAKEAction BLAKE256 = new BLAKEAction();
+			digest=BLAKE256.run(256, inputText);
+			break;
+
+		case BLAKE384:
+			BLAKEAction BLAKE384 = new BLAKEAction();
+			digest=BLAKE384.run(384, inputText);
+			break;
+
+		case BLAKE512:
+			BLAKEAction BLAKE512= new BLAKEAction();
+			digest=BLAKE512.run(512, inputText);
 			break;
 
 		case SHA256:
