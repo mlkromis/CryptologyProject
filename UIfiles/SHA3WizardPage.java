@@ -37,6 +37,7 @@ import org.eclipse.ui.PlatformUI;
 import org.jcryptool.core.operations.IOperationsConstants;
 import org.jcryptool.core.operations.editors.AbstractEditorService;
 import org.jcryptool.crypto.modern.sha3.SHA3Plugin;
+import org.jcryptool.crypto.modern.sha3.Keccak.BLAKEAction;
 import org.jcryptool.crypto.modern.sha3.echo.ECHOAction;
 import org.jcryptool.crypto.modern.sha3.jh.JHAction;
 import org.jcryptool.crypto.modern.sha3.skein.algorithm.SkeinAction;
@@ -76,6 +77,8 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     private Text JHOutput;
     private Button SkeinHash;
     private Text SkeinOutput;
+    private Button BlakeHash;
+    private Text BlakeOutput;
     /**
      * Option group for choosing create or verify hash
      */
@@ -94,6 +97,7 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     private int EchoSelect = 1;
     private int JHSelect = 0;
     private int SkeinSelect = 0;
+    private int BlakeSelect = 0;
     private int Bitlength = 0;
     private boolean Mode = false;
     
@@ -124,12 +128,12 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         BitlengthCombo.add("512");
         BitlengthCombo.select(0);
         createOptionGroup(pageComposite);
+        createSaltGroup(pageComposite);
         createAlgorithmGroup(pageComposite);
         CreateHash.setSelection(true);
         HashValue.setEnabled(false);
         EchoHash.setSelection(true);
         pageComposite.setLayout(new GridLayout());
-        createSaltGroup(pageComposite);
         createSubmitGroup(pageComposite);
         setControl(pageComposite);
         setPageComplete(mayFinish());
@@ -401,6 +405,31 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         SkeinOutput.setVisible(false);
         
         
+        GridData BlakeButton = new GridData();
+        BlakeButton.horizontalAlignment = GridData.FILL;
+        BlakeButton.grabExcessHorizontalSpace = true;
+        BlakeButton.grabExcessVerticalSpace = true;
+        BlakeButton.verticalAlignment = GridData.FILL;
+
+        BlakeHash = new Button(AlgorithmGroup, SWT.CHECK);
+        BlakeHash.setText(Messages.WizardMessage20);
+        BlakeHash.setLayoutData(BlakeButton);
+        BlakeHash.addListener(SWT.Selection, this);
+        
+        GridData BlakeText = new GridData();
+        BlakeText.horizontalAlignment = GridData.FILL;
+        BlakeText.grabExcessHorizontalSpace = false;
+        BlakeText.grabExcessVerticalSpace = true;
+        BlakeText.verticalAlignment = GridData.FILL;
+        
+        BlakeOutput = new Text(AlgorithmGroup, SWT.READ_ONLY | SWT.BORDER);
+        BlakeOutput.setLayoutData(AlgorithmGroupGridData);
+        String tempBlake = "";
+        BlakeOutput.setText(tempBlake);
+        BlakeOutput.addListener(SWT.Modify, this);
+        BlakeOutput.setVisible(false);
+        
+        
     }
     
     protected void createSubmitGroup(Composite parent){
@@ -522,6 +551,16 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         		SkeinSelect = 0;
         	}
         }
+        if(event.widget == BlakeHash){
+            if(BlakeHash.getSelection()){
+        		BlakeOutput.setVisible(true);
+        		BlakeSelect = 1;
+        	}
+        	else{
+        		BlakeOutput.setVisible(false);
+        		BlakeSelect = 0;
+        	}
+        }
 
         if (event.widget == Salt) {
             if (Salt.getSelection()) {
@@ -593,6 +632,18 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         }
         return skeinOn;
     }
+    
+    public String getBlakeSelect() {
+        String BlakeOn = "";
+        if(BlakeSelect == 1){
+        	BlakeOn = "ON";
+        }
+        else{
+        	BlakeOn = "OFF";
+        }
+        return BlakeOn;
+    }
+    
 
     public String getSalt() {
         return SaltEcho;
@@ -662,6 +713,10 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     	SkeinOutput.setText(HashDisplay);
     }
     
+    public void setBlakeText(String HashDisplay){
+    	BlakeOutput.setText(HashDisplay);
+    }
+    
     private boolean mayFinish() {
         /*
          * if (SHA3Type == -1) return false; if (Bitlength == -1) return false; if (CreateHash.getSelection()==false &&
@@ -676,10 +731,13 @@ public class SHA3WizardPage extends WizardPage implements Listener {
                 String EchoOn = getEchoSelect();
                 String JHOn = getJHSelect();
                 String SkeinOn = getSkeinSelect();
+                String BlakeOn = getBlakeSelect();
                 String Mode = getMode();
                 byte[] EchoHashValue = null;
                 byte[] JHHashValue = null;
                 byte[] SkeinHashValue = null;
+                byte[] BlakeHashValue = null;
+                byte[] TestString = "HelloTest".getBytes();
                 String Salt = getSalt();
                 String Input = getInputText();
                 /* Check if the hash shall be created or verified */
@@ -689,7 +747,7 @@ public class SHA3WizardPage extends WizardPage implements Listener {
                         if (Salt.compareTo("") == 0)
                             EchoHashValue = runECHO.run(Bitlength, Input);
                         else
-                            EchoHashValue = runECHO.run(Bitlength, Input);
+                            EchoHashValue = runECHO.run(Bitlength, Input,Salt);
                         setEchoText(toHex(EchoHashValue));
                     
                     
@@ -701,7 +759,16 @@ public class SHA3WizardPage extends WizardPage implements Listener {
                         SkeinAction runSkein = new SkeinAction();
                         SkeinHashValue = runSkein.run(Bitlength, Input, Bitlength);
                         setSkeinText(toHex(SkeinHashValue));
-                    }  
+                    }
+                } if (BlakeOn.compareTo("ON") == 0) {
+                    BLAKEAction runBlake = new BLAKEAction();
+                    if(Salt.compareTo("") == 0){
+                    	BlakeHashValue = runBlake.run(Bitlength, Input);
+                    }
+                    else{
+                    	BlakeHashValue = runBlake.run(Bitlength, Input,Salt);
+                    }
+                    setBlakeText(toHex(BlakeHashValue));
                 }
     }
     
@@ -718,7 +785,3 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         }
         return sb.toString();
     }
-    
-    
-    
-}
