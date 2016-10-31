@@ -18,7 +18,7 @@ public class BLAKEAlgorithm {
     private int FAIL=1;
     private int BAD_HASHBITLEN=2;
     
-    private Blake_HashState state;
+    private BLAKEHashState state;
     private byte hashval[];
     private int status;
     
@@ -61,16 +61,6 @@ public class BLAKEAlgorithm {
           0xBA7C9045F12C7F99L,0x24A19947B3916CF7L,
           0x0801F2E2858EFC16L,0x636920D871574E69L
         };
-  /*public static final BigInteger c64[] = {
-    new BigInteger("0x243F6A8885A308D3"),new BigInteger("0x13198A2E03707344"),
-    new BigInteger("0xA4093822299F31D0"),new BigInteger("0x082EFA98EC4E6C89"),
-    new BigInteger("0x452821E638D01377"),new BigInteger("0xBE5466CF34E90C6C"),
-    new BigInteger("0xC0AC29B7C97C50DD"),new BigInteger("0x3F84D5B5B5470917"),
-    new BigInteger("0x9216D5D98979FB1B"),new BigInteger("0xD1310BA698DFB5AC"),
-    new BigInteger("0x2FFD72DBD01ADFB7"),new BigInteger("0xB8E1AFED6A267E96"),
-    new BigInteger("0xBA7C9045F12C7F99"),new BigInteger("0x24A19947B3916CF7"),
-    new BigInteger("0x0801F2E2858EFC16"),new BigInteger("0x636920D871574E69")
-  };*/
     
     public static final int IV256[]={
          0x6A09E667, 0xBB67AE85,
@@ -121,10 +111,10 @@ public class BLAKEAlgorithm {
           };
 
     
-    Blake_Algorithm(int hashbitlen, byte[] data){
+    BLAKEAlgorithm(int hashbitlen, byte[] data){
         this.status = FAIL;
         this.hashval = new byte[hashbitlen/8];
-        this.state = new Blake_HashState();
+        this.state = new BLAKEHashState();
         
         if (hashbitlen < 384){
         	state.salt32[0] = 0;
@@ -142,10 +132,10 @@ public class BLAKEAlgorithm {
         status = Hash(hashbitlen, data, 8);
     }
 
-    Blake_Algorithm(int hashbitlen, byte[] data, String salt){
+    BLAKEAlgorithm(int hashbitlen, byte[] data, String salt){
         this.status = FAIL;
         this.hashval = new byte[hashbitlen/8];
-        this.state = new Blake_HashState();
+        this.state = new BLAKEHashState();
 
         AddSalt(hexStrToByteField(salt));
 

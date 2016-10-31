@@ -24,7 +24,7 @@ public class BLAKEHashState {
     public byte[] data64;
     public long salt64[];
 
-    Blake_HashState() {
+    BLAKEHashState() {
         this.h32 = new int[8];
         this.t32 = new int[2];
         this.data32 = new byte[64];
