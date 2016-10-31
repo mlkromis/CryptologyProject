@@ -40,6 +40,7 @@ public class Messages extends NLS {
     public static String WizardMessage17;
     public static String WizardMessage18;
     public static String WizardMessage19;
+    public static String WizardMessage20;
     public static String WizardError1;
     public static String WizardError2;
     public static String WizardError3;
