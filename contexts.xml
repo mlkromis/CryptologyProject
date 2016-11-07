@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contexts>
+	<context id="wizardhelp" title="SHA3">
+    <description>SHA3 is a hash function which is still development. Here are three implementations of the second round available for you.</description>
+  <topic href="$nl$/help/content/ECHOTutorial.html" label="SHA3 - ECHO"/>
+  <topic href="$nl$/help/content/JHTutorial.html" label="SHA3 - JH"/>
+  <topic href="$nl$/help/content/SkeinTutorial.html" label="SHA3 - Skein"/>
+  <topic href="nl/en/help/content/BLAKETutotial.html" label="SHA3-BLAKE"/>
+	</context>
+</contexts>

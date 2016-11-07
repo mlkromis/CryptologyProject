@@ -13,8 +13,7 @@
 
 	<p>The hash function BLAKE takes a message and salt as input. The salt is either 128 or 256 bits long depending on the hash length
 		 and if for some reason it is unneeded or left unspecified, then it takes the all-zero value by default.The output from BLAKE
-		is a 32-Byte Hash for BLAKE-224 and BLAKE-256, and is a 64-Byte Hash for BLAKE-384 and BLAKE-512.
-        BLAKE is basically 
+		is a 28-Byte Hash for BLAKE-224, a 32-Byte Hash for BLAKE-256, a 48-Byte Hash for BLAKE-384, and a 64-Byte Hash for BLAKE-512.
 	</p>
 
 	<b>The following bitlengths are supported:</b>
@@ -28,12 +27,11 @@
 	<p><b>How BLAKE works:</b></p>
 
 
-	<p>At first the 12 input words are connected with the last 4 chaining words and then the AES rounds follow.
-		After that the output is linked to the input per XOR and the first column is used as chaining variable. If the hashlength is between
-		128 and 256 the chainingvariable has a length of 512 byte.
-		The first bit of the last chaining variable are use as hashvalue.
+	<p>It follows the HAIFA iteration mode. The compression function depends on the salt provided and the number of bits hashed so far
+		(counter). The compression function itself is based on LAKE, a large inner state is initialized from the IV, salt, and counter.
+		It then gets updated by message dependent rounds. After these rounds, it gets compressed to return the next chain value.
 	</p>
-		<img src="ECHOfigure1.png" alt="Funktionsweise">
+		<img src="BLAKEfigure1.png" alt="Funktionsweise">
 		<br/>
 
 </body>
