@@ -7,8 +7,6 @@ package org.jcryptool.crypto.modern.sha3.blake;
  *
  */
 
-import java.util.Arrays;
-
 public class BLAKEAction {
 
     public byte[] run(int hashlength, String str) {
