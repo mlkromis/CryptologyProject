@@ -1,16 +1,6 @@
-// -----BEGIN DISCLAIMER-----
-/*******************************************************************************
- * Copyright (c) 2010 JCrypTool team and contributors
- *
- * All rights reserved. This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v1.0 which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-// -----END DISCLAIMER-----
-package blake;
+package org.jcryptool.crypto.modern.sha3.blake;
 
 import java.nio.ByteBuffer;
-import java.nio.ShortBuffer;
 import java.util.Arrays;
 
 public class BLAKEAlgorithm {
@@ -117,13 +107,13 @@ public class BLAKEAlgorithm {
         this.state = new BLAKEHashState();
         
         if (hashbitlen < 384){
-        	state.salt32[0] = 0;
+            state.salt32[0] = 0;
             state.salt32[1] = 0;
             state.salt32[2] = 0;
             state.salt32[3] = 0;  
         }
         else{
-        	state.salt64[0] = 0;
+            state.salt64[0] = 0;
             state.salt64[1] = 0;
             state.salt64[2] = 0;
             state.salt64[3] = 0;  
@@ -148,7 +138,6 @@ public class BLAKEAlgorithm {
     }
 
     public byte[] getHash(){
-    	StringBuilder tb = new StringBuilder();
         return this.hashval;
     }
     
@@ -182,7 +171,6 @@ public class BLAKEAlgorithm {
  
         long v[] = new long[16];
         long m[] = new long[16];
-        short check[] = new short[4];
         short round;
 
 
@@ -420,32 +408,32 @@ public class BLAKEAlgorithm {
           return FAIL;
 
         if ( state.hashbitlen < 384) {
-        	if (salt.length >= 16){
-        		state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
-        		state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
-        		state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
-        		state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
-        	}
-        	else{
-        		state.salt32[0] = 0;
+            if (salt.length >= 16){
+                state.salt32[0] = U8TO32_BE(Arrays.copyOfRange(salt,0,4));
+                state.salt32[1] = U8TO32_BE(Arrays.copyOfRange(salt,4,8));
+                state.salt32[2] = U8TO32_BE(Arrays.copyOfRange(salt,8,12));
+                state.salt32[3] = U8TO32_BE(Arrays.copyOfRange(salt,12,16));
+            }
+            else{
+                state.salt32[0] = 0;
                 state.salt32[1] = 0;
                 state.salt32[2] = 0;
                 state.salt32[3] = 0; 
-        	}
+            }
         }
         else {
-        	if(salt.length >= 32){
-        		state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
-        		state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
-        		state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
-        		state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
-        	}
-        	else{
-        		state.salt64[0] = 0;
+            if(salt.length >= 32){
+                state.salt64[0] = U8TO64_BE(Arrays.copyOfRange(salt,0,8));
+                state.salt64[1] = U8TO64_BE(Arrays.copyOfRange(salt,8,16));
+                state.salt64[2] = U8TO64_BE(Arrays.copyOfRange(salt,16,24));
+                state.salt64[3] = U8TO64_BE(Arrays.copyOfRange(salt,24,32));
+            }
+            else{
+                state.salt64[0] = 0;
                 state.salt64[1] = 0;
                 state.salt64[2] = 0;
                 state.salt64[3] = 0; 
-        	}
+            }
         }
 
         return SUCCESS;
@@ -695,14 +683,13 @@ public class BLAKEAlgorithm {
           target.put(hashval7);
         }
         
-        StringBuilder tb = new StringBuilder();
         return SUCCESS;
     }
     
     private int Final64() {
 
 
-    	byte msglen[] = new byte [16];
+        byte msglen[] = new byte [16];
         byte[] zz={(byte)0x00};
         byte[] zo={(byte)0x01};
         byte[] oz={(byte)0x80};
@@ -828,9 +815,9 @@ public class BLAKEAlgorithm {
         target.put(hashval5);
         
         if ( state.hashbitlen == 512 ) {
-        	byte[] hashval6 = U64TO8_BE(state.h64[6]);
-        	byte[] hashval7 = U64TO8_BE(state.h64[7]);
-        	target.put(hashval6);
+            byte[] hashval6 = U64TO8_BE(state.h64[6]);
+            byte[] hashval7 = U64TO8_BE(state.h64[7]);
+            target.put(hashval6);
             target.put(hashval7);
         }
         
@@ -848,12 +835,12 @@ public class BLAKEAlgorithm {
         int ret;
         ret = Init(hashbitlen);
         if ( ret != SUCCESS ){
-        	return ret;
+            return ret;
         }
         
         ret = Update(data, databitlen);
         if ( ret != SUCCESS ){
-        	return ret;
+            return ret;
         }
 
         ret = Final();
@@ -861,32 +848,32 @@ public class BLAKEAlgorithm {
     }
     
     private static int U8TO32_BE(byte[] p){
-		int q = java.nio.ByteBuffer.wrap(p).getInt();
-		       return q; }	    
-	 private static long U8TO64_BE(byte[] p){
-		 	int int1 = U8TO32_BE(Arrays.copyOfRange(p,0,4));
-		 	int int2 = U8TO32_BE(Arrays.copyOfRange(p,4,8));
-		 	long q = (((long)int1) << 32) | ((long)int2 & 0xffffffffL);
-		        return q;
-		    }
-	 private static byte[] U32TO8_BE(int v){
-		 ByteBuffer b = ByteBuffer.allocate(4);
-		 b.putInt(v);
-		 byte[] p = b.array();
-		 return p;
-	    }
-	 
-	private static byte[] U64TO8_BE(long v){ 
-	byte [] p1=U32TO8_BE((int)((v) >> 32));	
-	byte [] p2=U32TO8_BE((int)((v)));
-	byte [] p3=new byte[8];
-	for(int i=0; i<4; i++) {
-		Arrays.fill(p3, i, i+1, p1[i]);
-		Arrays.fill(p3, i+4, i+5, p2[i]);
-	}
-	return p3;    
-	}
-	private byte[] hexStrToByteField(String hexStr){
+        int q = java.nio.ByteBuffer.wrap(p).getInt();
+               return q; }      
+     private static long U8TO64_BE(byte[] p){
+            int int1 = U8TO32_BE(Arrays.copyOfRange(p,0,4));
+            int int2 = U8TO32_BE(Arrays.copyOfRange(p,4,8));
+            long q = (((long)int1) << 32) | ((long)int2 & 0xffffffffL);
+                return q;
+            }
+     private static byte[] U32TO8_BE(int v){
+         ByteBuffer b = ByteBuffer.allocate(4);
+         b.putInt(v);
+         byte[] p = b.array();
+         return p;
+        }
+     
+    private static byte[] U64TO8_BE(long v){ 
+    byte [] p1=U32TO8_BE((int)((v) >> 32)); 
+    byte [] p2=U32TO8_BE((int)((v)));
+    byte [] p3=new byte[8];
+    for(int i=0; i<4; i++) {
+        Arrays.fill(p3, i, i+1, p1[i]);
+        Arrays.fill(p3, i+4, i+5, p2[i]);
+    }
+    return p3;    
+    }
+    private byte[] hexStrToByteField(String hexStr){
         if(hexStr.length()%2==0){
             byte [] bytes = new byte[hexStr.length()/2];
             int i,j;
@@ -902,4 +889,3 @@ public class BLAKEAlgorithm {
             return null;
     }
 }
-
