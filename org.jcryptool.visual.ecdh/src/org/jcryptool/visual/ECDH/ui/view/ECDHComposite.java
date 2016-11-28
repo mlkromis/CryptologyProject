@@ -432,10 +432,10 @@ public class ECDHComposite extends Composite implements PaintListener {
         label.setText(Messages.getString("ECDHView.labelCurve")); //$NON-NLS-1$
         textCurve = new Text(groupParameters, SWT.BORDER | SWT.READ_ONLY);
         textCurve.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-        label = new Label(groupParameters, SWT.NONE);
-        label.setText(Messages.getString("ECDHView.labelGenerator")); //$NON-NLS-1$
-        textGenerator = new Text(groupParameters, SWT.BORDER | SWT.READ_ONLY);
-        textGenerator.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      //  label = new Label(groupParameters, SWT.NONE);
+       // label.setText(Messages.getString("ECDHView.labelGenerator")); //$NON-NLS-1$
+     //   textGenerator = new Text(groupParameters, SWT.BORDER | SWT.READ_ONLY);
+      //  textGenerator.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
     }
 
     /**

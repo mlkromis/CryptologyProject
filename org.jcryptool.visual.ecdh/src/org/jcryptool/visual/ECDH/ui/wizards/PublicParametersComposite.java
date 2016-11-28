@@ -108,8 +108,9 @@ public class PublicParametersComposite extends Composite {
     }
     
     private void initialize() {
-        curve = new ECFp();
-        ((ECFp) curve).updateCurve(1, 1, 23);
+        message = Messages.getString("ECDHWizPP.default");
+        //curve = new ECFp();
+        //((ECFp) curve).updateCurve(1, 1, 23);
         createGroupCurve();
       // createGroupGenerator();
         setSize(new org.eclipse.swt.graphics.Point(606, 450));
