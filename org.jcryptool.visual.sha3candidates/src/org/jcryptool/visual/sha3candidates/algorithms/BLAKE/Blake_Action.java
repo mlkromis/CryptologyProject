@@ -16,17 +16,22 @@ package org.jcryptool.visual.sha3candidates.algorithms.BLAKE;
  * @author Daniel Finn
  *
  */
-
-
+import java.util.Arrays;
 
 public class Blake_Action {
-	public byte[] run(int hashlength, String str) {
-        Blake_Algorithm e = new Blake_Algorithm(hashlength, str.getBytes());
-        return e.getHash();
+	
+	public Blake_Algorithm Algorithm;
+	
+    public byte[] run(int hashlength, String str) {
+    	byte[] hash=null;
+		byte[] data= str.getBytes();
+		Algorithm = new Blake_Algorithm(hashlength, data);
+		hash = Algorithm.getHash();
+		return hash;
     }
 
     public byte[] run(int hashlength, String str, String salt) {
-        Blake_Algorithm e = new Blake_Algorithm(hashlength, str.getBytes(),salt);
-        return e.getHash();
+    	Algorithm = new Blake_Algorithm(hashlength, str.getBytes(), salt);
+        return Algorithm.getHash();
     }
 }
