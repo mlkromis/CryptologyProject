@@ -9,9 +9,6 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_Algorithm.IV224;
-import static org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_Algorithm.c32;
-
 import org.bouncycastle.crypto.digests.GOST3411Digest;
 import org.bouncycastle.crypto.digests.MD2Digest;
 import org.bouncycastle.crypto.digests.MD4Digest;
@@ -53,8 +50,6 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -79,20 +74,12 @@ import org.jcryptool.visual.sha3candidates.algorithms.HashFunction;
 import org.jcryptool.visual.sha3candidates.algorithms.ECHO.ECHOAction;
 import org.jcryptool.visual.sha3candidates.algorithms.JH.JHAction;
 import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_Action;
-import static org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_Algorithm.IV224;
-////////
-import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_tab;
-import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_tab0;
-import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_tab1;
-import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_tab2;
-import org.jcryptool.visual.sha3candidates.algorithms.BLAKE.Blake_tab3;
-////////////
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 
-public class HashingView extends ViewPart {
+public class HashingView2_origin extends ViewPart {
 
 	/**
 	 * The ID of the view as specified by the extension.
@@ -100,7 +87,7 @@ public class HashingView extends ViewPart {
 	public static final String ID = "org.jcryptool.visual.sha3candidates.views.HashingView"; //$NON-NLS-1$
 	private static final int OUTPUT_SEPERATOR = 144;
 
-	private org.jcryptool.visual.sha3candidates.algorithms.HashFunction hash = org.jcryptool.visual.sha3candidates.algorithms.HashFunction.BLAKE224;
+	private org.jcryptool.visual.sha3candidates.algorithms.HashFunction hash = org.jcryptool.visual.sha3candidates.algorithms.HashFunction.ECHO224;
 	private String hashInputValueHex = ""; //$NON-NLS-1$
 	private String hashOutputValueHex = ""; //$NON-NLS-1$
 	private String page="file:///C:/workspace1/org.jcryptool.visual.sha3candidates/nl/en/help/content/ECHOTutorial.html";
@@ -119,17 +106,14 @@ public class HashingView extends ViewPart {
 	private Button btnDezimal;
 	private Button btnBinary;
 	private Button btnChanged;
-	private Button btnUnchanged;	
+	private Button btnUnchanged;
+	private Blake_Action BLAKE224;	
 	private TabFolder tabFolder;
-	private Blake_tab0 blake_tab0;
-	private Blake_tab1 blake_tab1;
-	private Blake_tab2 blake_tab2;
-	private Blake_tab3 blake_tab3;
-	private Blake_Action BLAKE224;
+
 	/**
 	 * The constructor.
 	 */
-	public HashingView() {
+	public HashingView2_origin() {
 	}
 
 	@Override
@@ -138,12 +122,13 @@ public class HashingView extends ViewPart {
 		ScrolledComposite scrolledComposite = new ScrolledComposite(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		scrolledComposite.setExpandHorizontal(true);
 		scrolledComposite.setExpandVertical(true);
-		scrolledComposite.setBounds(10, 10, 1600, 800);
+		scrolledComposite.setBounds(10, 10, 639, 410);
 		Composite compositeMain = new Composite(scrolledComposite, SWT.NONE);
-		compositeMain.setBounds(10, 10, 1600, 800);
+////////		compositeMain.setLayout(new GridLayout(2, false));
+		compositeMain.setLayout(new GridLayout(4, false));
+		compositeMain.setBounds(10, 10, 600, 400);
 		
 		styledTextDescription = new StyledText(compositeMain, SWT.BORDER | SWT.READ_ONLY | SWT.WRAP);
-		styledTextDescription.setBounds(10, 10, 400, 50);
 		styledTextDescription.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -159,131 +144,143 @@ public class HashingView extends ViewPart {
 			}
 		});
 		styledTextDescription.setEditable(false);
-		GridData gd_styledTextDescription = new GridData(SWT.FILL, SWT.UP, true, false, 4, 1);
+		GridData gd_styledTextDescription = new GridData(SWT.FILL, SWT.FILL, true, false, 4, 1);
 		gd_styledTextDescription.widthHint = 300;
 		gd_styledTextDescription.heightHint = 60;
 		styledTextDescription.setLayoutData(gd_styledTextDescription);
 		styledTextDescription.setText(Messages.HashingView_0 + Messages.HashingView_1);
 
-		
-		Group Hashalgorithm = new Group(compositeMain,  SWT.FILL | SWT.H_SCROLL);
-		Hashalgorithm.setBounds(420, 0,  1500, 810);
-		Hashalgorithm.setText("Inside Hash Function");
+		header = new StyleRange();
+		header.start = 0;
+		header.length = Messages.HashingView_0.length();
+		header.fontStyle = SWT.BOLD;
+		styledTextDescription.setStyleRange(header);
 
-		tabFolder= new TabFolder(Hashalgorithm, SWT.FILL | SWT.H_SCROLL); 
-		tabFolder.setBounds(10, 20, 1480, 800);
-//		tabFolder.setVisible(false);
-		Group tabpage0 = new Group(tabFolder, SWT.NONE);
-		tabpage0.setBounds(10, 10, 1470, 800);		
-		TabItem tabItem0 = new TabItem(tabFolder, SWT.NONE);
-		tabItem0.setText("Initialization");
-		tabItem0.setControl(tabpage0);
-		
-		Group tabpage1 = new Group(tabFolder, SWT.NONE);
-		tabpage1.setBounds(10, 10, 1470, 800);		
-		TabItem tabItem1 = new TabItem(tabFolder, SWT.NONE);
-		tabItem1.setText("Compressing");
-		tabItem1.setControl(tabpage1);
-		
-		Group tabpage2 = new Group(tabFolder, SWT.NONE);
-		tabpage2.setBounds(10, 20, 1470, 800);		
-		TabItem tabItem2 = new TabItem(tabFolder, SWT.NONE);
-		tabItem2.setText("Sigma");
-		tabItem2.setControl(tabpage2);
-		
-		Group tabpage3 = new Group(tabFolder, SWT.NONE);
-		tabpage3.setBounds(10, 10, 1470, 800);		
-		TabItem tabItem3 = new TabItem(tabFolder, SWT.NONE);
-		tabItem3.setText("Output");
-		tabItem3.setControl(tabpage3);
-		
-		
-		blake_tab0=new Blake_tab0(tabFolder, tabpage0);
-		blake_tab1=new Blake_tab1(tabFolder, tabpage1);
-		blake_tab3=new Blake_tab3(tabFolder, tabpage3); 
-		
-		blake_tab0.message3.addSelectionListener(new SelectionAdapter(){  
-			public void widgetSelected(SelectionEvent e){			
-					long v16[]=new long[16];
-					for(int i=0;i<8;i++) {
-						v16[i]=IV224[i]&0xffffffffL;
-					}
-					for(int i=0; i<4;i++) {
-						v16[i+8]=((long)(BLAKE224.Algorithm.state.salt32[i]^c32[i]))& 0xffffffffL;
-					}
-					v16[12]=((long)(BLAKE224.Algorithm.state.t32[0] ^ c32[4]) & 0xffffffffL);
-					v16[13]=((long)(BLAKE224.Algorithm.state.t32[0] ^ c32[5]) & 0xffffffffL);
-					v16[14]=((long)(BLAKE224.Algorithm.state.t32[1] ^ c32[6]) & 0xffffffffL);
-					v16[15]=((long)(BLAKE224.Algorithm.state.t32[1] ^ c32[7]) & 0xffffffffL);
-					
-					blake_tab1.load(v16, textInput.getText().getBytes());
-					tabItem1.setControl(blake_tab0.message3);
-//					tabpage0.setVisible(false);
-//					tabpage1.setVisible(true);
-//					tabpage1.layout();
+		Menu menu_1 = new Menu(styledTextDescription);
+		styledTextDescription.setMenu(menu_1);
+
+		MenuItem mntmCopy_1 = new MenuItem(menu_1, SWT.NONE);
+		mntmCopy_1.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				styledTextDescription.copy();
 			}
-			});
-					
-			blake_tab1.sigma_button.addSelectionListener(new SelectionAdapter(){  
-						public void widgetSelected(SelectionEvent e){
-							blake_tab2=new Blake_tab2(tabFolder, tabpage2);
-							tabpage0.setVisible(false);
-							tabpage1.setVisible(false);
-							tabpage2.setVisible(true);
-							tabpage2.layout();
-							}
-				        public void widgetDefaultSelected(SelectionEvent e) {  	      
-				        }  
-			});
-					
-			blake_tab1.SaltButton.addSelectionListener(new SelectionAdapter(){  
-						public void widgetSelected(SelectionEvent e){
-							if(blake_tab1.round_num>=14){
-							tabItem3.setText("Hash output");
-							blake_tab3.load(blake_tab1.v16_output, textHashOutput.getText());
-							for(int i=0; i<4; i++){
-								blake_tab3.s4_value[i].setText("0x"+ Integer.toHexString(BLAKE224.Algorithm.state.salt32[i]));
-							}
-							blake_tab3.load_v16();
-							tabpage0.setVisible(false);
-							tabpage1.setVisible(false);
-							tabpage2.setVisible(false);
-							tabpage3.setVisible(true);
-							tabpage3.layout();
-								}
-							}
-				        public void widgetDefaultSelected(SelectionEvent e) {  	      
-				        }  
-		}); 
+		});
+		mntmCopy_1.setText(Messages.HashingView_mntmCopy_text);
 
-        Group Hashinput = new Group(compositeMain, SWT.NONE);
-		Hashinput.setBounds(10, 70, 400, 650);
+		MenuItem menuItem_1 = new MenuItem(menu_1, SWT.SEPARATOR);
+
+		MenuItem mntmSelectAll_1 = new MenuItem(menu_1, SWT.NONE);
+		mntmSelectAll_1.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				styledTextDescription.selectAll();
+			}
+		});
+		mntmSelectAll_1.setText(Messages.HashingView_mntmSelectAll_text);
+
+		Group Hashinput = new Group(compositeMain, SWT.NONE);
+////////grpHashfunction.setLayout(new GridLayout(1, false));
 		Hashinput.setLayout(new GridLayout(1, false));
+////////grpHashfunction.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		Hashinput.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true, 1, 10));
 		Hashinput.setText("Hash Input");
 		
 		Group grpHashfunction = new Group(Hashinput, SWT.NONE);
+////////		grpHashfunction.setLayout(new GridLayout(1, false));
 		grpHashfunction.setLayout(new GridLayout(1, false));
+////////		grpHashfunction.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		grpHashfunction.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
-		grpHashfunction.setText("Select a hash function");
+		grpHashfunction.setText(Messages.HashingView_2);
+		
+		Group grpHashalgorithm = new Group(compositeMain, SWT.NONE);
+		grpHashalgorithm.setLayout(new GridLayout(1, false));
+		grpHashalgorithm.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, true, true, 3, 10));
+		grpHashalgorithm.setText("Hash Algorithm");
+		
+		tabFolder = new TabFolder(grpHashalgorithm, SWT.NONE); 
+        tabFolder.setLayout(new GridLayout(10, true));  
+        tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));  
+        
+		TabItem tabItem1 = new TabItem(tabFolder, SWT.NONE);
+		tabItem1.setText("属性标签1");
+		TabItem tabItem2 = new TabItem(tabFolder, SWT.NONE);
+		tabItem2.setText("属性标签2");
+		
+		Group tabpage1 = new Group(tabFolder, SWT.NONE);
+		tabpage1.setLayout(new GridLayout(1, true));  
+		tabItem1.setControl(tabpage1);
+		Hashpage = new Browser(tabpage1, SWT.NONE);
+		Hashpage.setLayout(new FillLayout());
+		Hashpage.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		Hashpage.setUrl(page);
+		
+
+		Group tabpage2 = new Group(tabFolder, SWT.NONE);
+		tabpage2.setLayout(new GridLayout(10, true));  
+		tabItem2.setControl(tabpage2);
+
+		table1 = new Table(tabpage2, SWT.BORDER | SWT.FULL_SELECTION);
+		table1.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, true, 1, 1));
+		table1.setHeaderVisible(true);
+		table1.setLinesVisible(true);
+		TableColumn tc1[] = new TableColumn[2];
+		tc1[0]=new TableColumn(table1, SWT.CENTER);
+		tc1[0].setWidth(40);
+		tc1[0].setResizable(true);
+		tc1[0].setText("hhhhhh");
+		tc1[1] = new TableColumn(table1, SWT.CENTER);
+		tc1[1].setWidth(100);
+		tc1[1].setResizable(true);
+		tc1[1].setText("valueeeeeeeeeeee");
+		TableItem item[]= new TableItem[8];
+		for (int col = 0; col < 8 ; col++) {
+			item[col]= new TableItem(table1, SWT.NONE);
+		}
+		
+		
+		table = new Table(tabpage2, SWT.BORDER | SWT.FULL_SELECTION);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true); 
+		table.setLayoutData(new GridData(SWT.LEFT, SWT.UP, true, true, 1, 1));
+		TableColumn tc[] = new TableColumn[2];
+		tc[0]=new TableColumn(table, SWT.CENTER);
+		tc[0].setWidth(40);
+		tc[0].setResizable(true);
+		tc[0].setText("h");
+		tc[1] = new TableColumn(table, SWT.CENTER);
+		tc[1].setWidth(100);
+		tc[1].setResizable(true);
+		tc[1].setText("value");
+		TableItem item1[]= new TableItem[8];
+		for (int col = 0; col < 8 ; col++) {
+			item1[col]= new TableItem(table, SWT.NONE);
+		}
+		
+		
+		
 		
 		comboHash = new Combo(grpHashfunction, SWT.READ_ONLY);
 		comboHash.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!textInput.getText().isEmpty()) {
-					hashInputValueHex = computeHash(comboHash.getText(), textInput.getText(), null, textHashInput, Hashpage);
-					blake_tab0.create_m(BLAKE224,textInput.getText(), textOutput.getText());
-					}
+					hashInputValueHex = computeHash(comboHash.getText(), textInput.getText(), textHashInput, Hashpage, item);
+				}
 
 				if (!textOutput.getText().isEmpty()) {
-					hashOutputValueHex = computeHash(comboHash.getText(), textInput.getText(), textOutput.getText(), textHashOutput, Hashpage);
-					blake_tab0.create_m(BLAKE224, textInput.getText(), textOutput.getText());
-					}
+					hashOutputValueHex = computeHash(comboHash.getText(), textOutput.getText(), textHashOutput, Hashpage, item);
+				}
 
-
+				if (!textInput.getText().isEmpty() && !textOutput.getText().isEmpty()) {
+					computeDifference();
+				} else {
+					textDifference.setText(""); //$NON-NLS-1$
+				}
 			}
 		});
-		comboHash.setItems(new String[] {
+		comboHash
+				.setItems(new String[] {
 						"ECHO (224 bits)", "ECHO (256 bits)", "ECHO (384 bits)", "ECHO (512 bits)", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 						"JH (224 bits)", "JH (256 bits)", "JH (384 bits)", "JH (512 bits)",
 						"BLAKE (224 bits)", "BLAKE (256 bits)", "BLAKE (384 bits)", "BLAKE (512 bits)",
@@ -362,8 +359,8 @@ public class HashingView extends ViewPart {
 
 		Group grpInput = new Group(Hashinput, SWT.NONE);
 		grpInput.setLayout(new GridLayout(1, false));
-		grpInput.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 18));
-		grpInput.setText("Input String");
+		grpInput.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, true, 4, 2));
+		grpInput.setText(Messages.HashingView_7);
 
 		textInput = new Text(grpInput, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 		textInput.addFocusListener(new FocusAdapter() {
@@ -384,13 +381,16 @@ public class HashingView extends ViewPart {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				if (!textInput.getText().isEmpty()) {
-					hashInputValueHex = computeHash(comboHash.getText(), textInput.getText(), null, textHashInput, Hashpage);
-					hashOutputValueHex = computeHash(comboHash.getText(), textInput.getText(), textOutput.getText(), textHashOutput, Hashpage);
-					blake_tab0.create_m(BLAKE224, textInput.getText(), textOutput.getText());
+					hashInputValueHex = computeHash(comboHash.getText(), textInput.getText(), textHashInput, Hashpage, item);
 				} else {
 					textHashInput.setText(""); //$NON-NLS-1$
 				}
 
+				if (!textInput.getText().isEmpty() && !textOutput.getText().isEmpty()) {
+					computeDifference();
+				} else {
+					textDifference.setText(""); //$NON-NLS-1$
+				}
 			}
 		});
 		GridData gd_textInput = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2);
@@ -400,8 +400,8 @@ public class HashingView extends ViewPart {
 
 		Group grpOutput = new Group(Hashinput, SWT.NONE);
 		grpOutput.setLayout(new GridLayout(1, false));
-		grpOutput.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false, 1, 1));
-		grpOutput.setText("Salt");
+		grpOutput.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, true, 4, 2));
+		grpOutput.setText(Messages.HashingView_9);
 
 		textOutput = new Text(grpOutput, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 		textOutput.addFocusListener(new FocusAdapter() {
@@ -422,28 +422,25 @@ public class HashingView extends ViewPart {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				if (!textOutput.getText().isEmpty()) {
-					hashOutputValueHex = computeHash(comboHash.getText(), textInput.getText(), textOutput.getText(), textHashOutput, Hashpage);
-					blake_tab0.create_m(BLAKE224, textInput.getText(), textOutput.getText());
+					hashOutputValueHex = computeHash(comboHash.getText(), textOutput.getText(), textHashOutput, Hashpage, item);
 				} else {
 					textHashOutput.setText(""); //$NON-NLS-1$
 				}
 
 				if (!textInput.getText().isEmpty() && !textOutput.getText().isEmpty()) {
-
+					computeDifference();
 				} else {
 					textDifference.setText(""); //$NON-NLS-1$
 				}
 			}
 		});
-		GridData gd_textOutput = new GridData(SWT.FILL, SWT.UP, true, true, 1, 1);
+		GridData gd_textOutput = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2);
 		gd_textOutput.heightHint = 90;
 		textOutput.setLayoutData(gd_textOutput);
-		
-		
-		
+
 		Group grpHashInput = new Group(compositeMain, SWT.NONE);
-		grpHashInput.setBounds(10, 730, 400, 60);
 		grpHashInput.setLayout(new GridLayout(1, false));
+		grpHashInput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
 		grpHashInput.setText(Messages.HashingView_10);
 
 		textHashInput = new Text(grpHashInput, SWT.BORDER | SWT.READ_ONLY);
@@ -459,8 +456,8 @@ public class HashingView extends ViewPart {
 		textHashInput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
 		Group grpHashOutput = new Group(compositeMain, SWT.NONE);
-		grpHashOutput.setBounds(10, 800, 1300, 60);
 		grpHashOutput.setLayout(new GridLayout(4, false));
+		grpHashOutput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
 		grpHashOutput.setText(Messages.HashingView_8);
 
 		textHashOutput = new Text(grpHashOutput, SWT.BORDER | SWT.READ_ONLY);
@@ -475,11 +472,84 @@ public class HashingView extends ViewPart {
 		});
 		textHashOutput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-		
+		Group grpUnterschied = new Group(compositeMain, SWT.NONE);
+		grpUnterschied.setLayout(new GridLayout(4, false));
+		grpUnterschied.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 4, 1));
+		grpUnterschied.setText(Messages.HashingView_11);
+
+		textDifference = new StyledText(grpUnterschied, SWT.BORDER | SWT.FULL_SELECTION | SWT.READ_ONLY | SWT.WRAP
+				| SWT.V_SCROLL);
+		textDifference.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				textDifference.setSelection(0, 0);
+			}
+		});
+		textDifference.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.stateMask == SWT.CTRL && e.keyCode == 'a') {
+					textDifference.selectAll();
+				}
+			}
+		});
+		textDifference.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 4, 1));
+
+		Menu menu = new Menu(textDifference);
+		textDifference.setMenu(menu);
+
+		MenuItem mntmCopy = new MenuItem(menu, SWT.NONE);
+		mntmCopy.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				textDifference.copy();
+			}
+		});
+		mntmCopy.setText(Messages.HashingView_mntmCopy_text);
+
+		MenuItem menuItem = new MenuItem(menu, SWT.SEPARATOR);
+
+		MenuItem mntmSelectAll = new MenuItem(menu, SWT.NONE);
+		mntmSelectAll.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				textDifference.selectAll();
+			}
+		});
+		mntmSelectAll.setText(Messages.HashingView_mntmSelectAll_text);
+
+		btnUnchanged = new Button(grpUnterschied, SWT.RADIO);
+		btnUnchanged.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				computeDifference();
+			}
+		});
+		btnUnchanged.setSelection(true);
+		btnUnchanged.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+		btnUnchanged.setText(Messages.HashingView_btnUnchanged_text);
+
+		btnChanged = new Button(grpUnterschied, SWT.RADIO);
+		btnChanged.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				computeDifference();
+			}
+		});
+		btnChanged.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1));
+		btnChanged.setText(Messages.HashingView_btnChanged_text);
+		textDifference.invokeAction(ST.CUT);
+		textDifference.invokeAction(ST.COPY);
+		textDifference.invokeAction(ST.PASTE);
 		scrolledComposite.setContent(compositeMain);
 		
-		scrolledComposite.setMinSize(new Point(1600, 830));						
+		if (System.getProperty("os.name").compareToIgnoreCase("Windows 10") == 0) {
+			scrolledComposite.setMinSize(new Point(1600, 830));						
+		} else {
+			scrolledComposite.setMinSize(new Point(1000, 630));			
+		}
 
+		loadExampleText();
 	}
 
 	private String hexToDecimal(String hex) {
@@ -580,9 +650,10 @@ public class HashingView extends ViewPart {
 		textDifference.setText(""); //$NON-NLS-1$
 		Hashpage.setUrl("");
 
+		loadExampleText();
 	}
 	
-	private String computeHash(String hashName, String inputText, String saltText, Text hashText, Browser hashpage) {
+	private String computeHash(String hashName, String inputText, Text hashText, Browser hashpage, TableItem item[]) {
 		hash = hash.getName(hashName);
 		byte[] digest = null;
 		switch (hash) {
@@ -632,40 +703,30 @@ public class HashingView extends ViewPart {
 			break;
 		case BLAKE224:
 			BLAKE224= new Blake_Action();
-			if(saltText==null)	{
-				digest=BLAKE224.run(224, inputText);
-			}	else if(saltText.length()!=32){
-				String salt_extend=saltText;
-				for(int i=0; i<32-saltText.length();i++){
-					salt_extend="0"+salt_extend;
-				}
-				digest=BLAKE224.run(224, inputText, salt_extend);
+			digest=BLAKE224.run(224, inputText, null);
+			hashpage.setUrl("file:///C:/workspace1/org.jcryptool.visual.sha3candidates/nl/en/help/content/ECHOTutorial.html");
+			
+			for(int i=0; i<item.length;i++){
+				item[i].setText(0, "h"+i);
+//				item[i].setText(1, "0x"+Integer.toHexString(BLAKE224.e.state.h32[i]));
 			}
+			
 			break;
 		case BLAKE256:
 			Blake_Action BLAKE256 = new Blake_Action();
-			if(saltText==null)	{
-				digest=BLAKE256.run(256, inputText);
-			}	else if(saltText.length()!=32){
-				digest=BLAKE256.run(256, inputText);
-				hashText.setText("salt must be a 32 character string!!!");
-				return "salt must be a 32 character string!!!";
-			}	else {
-				digest=BLAKE256.run(256, inputText, saltText);
-			}
+			digest=BLAKE256.run(256, inputText, null);
 			hashpage.setUrl("file:///C:/workspace1/org.jcryptool.visual.sha3candidates/nl/en/help/content/ECHOTutorial.html");
-
 			break;
 
 		case BLAKE384:
 			Blake_Action BLAKE384 = new Blake_Action();
-			digest=BLAKE384.run(384, inputText, saltText);
+			digest=BLAKE384.run(384, inputText, null);
 			hashpage.setUrl("file:///C:/workspace1/org.jcryptool.visual.sha3candidates/nl/en/help/content/ECHOTutorial.html");
 			break;
 
 		case BLAKE512:
 			Blake_Action BLAKE512= new Blake_Action();
-			digest=BLAKE512.run(512, inputText, saltText);
+			digest=BLAKE512.run(512, inputText, null);
 			hashpage.setUrl("file:///C:/workspace1/org.jcryptool.visual.sha3candidates/nl/en/help/content/ECHOTutorial.html");
 			break;
 
@@ -780,8 +841,8 @@ public class HashingView extends ViewPart {
 		
 		String hashHexValue = new String(Hex.encode(digest));
 		if (btnHexadezimal.getSelection()) {
-			String hashValue = hashHexValue.toUpperCase().replaceAll(".{2}", "$0 "); //$NON-NLS-1$ //$NON-NLS-2$
-			hashText.setText(hashValue);
+			String hashValueOutput = hashHexValue.toUpperCase().replaceAll(".{2}", "$0 "); //$NON-NLS-1$ //$NON-NLS-2$
+			hashText.setText(hashValueOutput);
 		} else if (btnDezimal.getSelection()) {
 			String hashValue = hexToDecimal(hashHexValue);
 			hashValue = hashValue.replaceAll(".{3}", "$0 "); //$NON-NLS-1$ //$NON-NLS-2$
@@ -795,6 +856,189 @@ public class HashingView extends ViewPart {
 		return hashHexValue;
 	}
 
+	private void computeDifference() {
+		BigInteger input = new BigInteger(hashInputValueHex, 16);
+		BigInteger output = new BigInteger(hashOutputValueHex, 16);
+		BigInteger zero=new BigInteger("000000", 16);
+		String result = input.xor(output).toString(16);
+		result = hexToBinary(result);
 
-	
+		if (result.toString().equalsIgnoreCase("0")) { //$NON-NLS-1$
+			textDifference.setText((hexToBinary("0").replaceAll(".{8}", "$0#"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		} else {
+			int count = result.length();
+			int zeroBits = result.length() - result.replace("0", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
+			int oneBits = result.length() - result.replace("1", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
+			double percent = ((double) oneBits / (double) count) * 100;
+			ArrayList<int[]> sequence = findUnchanged(result);
+			ArrayList<int[]> sequenceChanged = findChanged(result);
+
+			result = result.replaceAll(".{8}", "$0#"); //$NON-NLS-1$ //$NON-NLS-2$
+
+			int lengthPrettyPrint = result.length();
+			count = lengthPrettyPrint / OUTPUT_SEPERATOR;
+
+			StringBuilder sb = new StringBuilder(result);
+
+			for (int i = 0; i < count; i++) {
+				sb.insert(((OUTPUT_SEPERATOR) * (i + 1) + i), "\n"); //$NON-NLS-1$
+			}
+
+			if (hash == HashFunction.RIPEMD160 || hash == HashFunction.TIGER
+					|| hash == HashFunction.SHA3_224) {
+				sb.insert(sb.length(), "\n"); //$NON-NLS-1$
+			}
+
+			char[] bitArray = sb.toString().toCharArray();
+
+			sb.append("\n" + String.format("%1$,.2f", percent) //$NON-NLS-1$ //$NON-NLS-2$
+					+ Messages.HashingView_12 + oneBits + Messages.HashingView_13 + (zeroBits + oneBits)
+					+ Messages.HashingView_14 + sequence.get(0)[1] + Messages.HashingView_15 + sequence.get(0)[0] + "."); //$NON-NLS-1$
+
+			if (!sequenceChanged.isEmpty()) {
+				sb.append(Messages.HashingView_17 + sequenceChanged.get(0)[1] + Messages.HashingView_15
+						+ sequenceChanged.get(0)[0] + Messages.HashingView_18 + sequence.size()
+						+ Messages.HashingView_21 + sequenceChanged.size() + "."); //$NON-NLS-1$
+			}
+
+			textDifference.setText(sb.toString());
+			if (btnUnchanged.getSelection()) {
+				for (int[] is : sequence) {
+					StyleRange sr = new StyleRange();
+					sr.start = is[1] + (is[1] / 8) + ((is[1] + (is[1] / 8)) / OUTPUT_SEPERATOR);
+
+					int cr = ((((is[1] + (is[1] / 8) ) % OUTPUT_SEPERATOR) + is[0] ) / OUTPUT_SEPERATOR);
+					if ((is[1] + is[0]) % 8 != 0) {
+						int seed = ((is[1] % 8) + is[0]) / 8;
+						sr.length = is[0] + seed + cr;
+					} else {
+						int seed = 8 - (is[1] % 8);
+						
+						if (is[0] <= seed) {
+							sr.length = is[0] + cr;
+						} else {
+							sr.length = is[0] + ((is[0] + seed) / 8) + cr;
+						}
+					}
+					sr.underline = true;
+					textDifference.setStyleRange(sr);
+				}
+			}
+
+			for (int i = 0; i < bitArray.length; i++) {
+				if (bitArray[i] == '1') {
+					StyleRange bits = new StyleRange();
+					bits.start = i;
+					bits.length = 1;
+					bits.foreground = this.getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_RED);
+					textDifference.setStyleRange(bits);
+				}
+			}
+
+			if (btnChanged.getSelection()) {
+				if (btnChanged.getSelection()) {
+					for (int[] is : sequenceChanged) {
+						StyleRange sr = new StyleRange();						
+						sr.start = is[1] + (is[1] / 8) + ((is[1] + (is[1] / 8)) / OUTPUT_SEPERATOR);
+						int cr = ((((is[1] + (is[1] / 8) ) % OUTPUT_SEPERATOR) + is[0] ) / OUTPUT_SEPERATOR);
+						
+						if ((is[1] + is[0]) % 8 != 0) {
+							int seed = ((is[1] % 8) + is[0]) / 8;
+							sr.length = is[0] + seed + cr;
+						} else {
+							int seed = 8 - (is[1] % 8);
+							
+							if (is[0] <= seed) {
+								sr.length = is[0] + cr;
+							} else {
+								sr.length = is[0] + ((is[0] + seed) / 8) + cr;
+							}
+						}
+						sr.underline = true;
+						sr.foreground = this.getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_RED);
+						textDifference.setStyleRange(sr);
+					}
+				}
+			}
+		}
+	}
+
+	private ArrayList<int[]> findUnchanged(String s) {
+		ArrayList<int[]> result = new ArrayList<>();
+
+		String currentSequence = null;
+		String prevSequence = null;
+
+		Matcher m = Pattern.compile("(0+)").matcher(s); //$NON-NLS-1$
+		m.find();
+		prevSequence = m.group();
+		currentSequence = m.group();
+
+		while (m.find()) {
+			currentSequence = m.group();
+			if (prevSequence.length() < currentSequence.length()) {
+				prevSequence = m.group();
+			}
+		}
+
+		if (prevSequence != null) {
+			m = Pattern.compile(prevSequence).matcher(s);
+			while (m.find()) {
+				int[] tmp = new int[2];
+				tmp[0] = m.group().length();
+				tmp[1] = m.start();
+				result.add(tmp);
+			}
+		}
+		return result;
+	}
+
+	private ArrayList<int[]> findChanged(String s) {
+		ArrayList<int[]> result = new ArrayList<>();
+
+		String currentSequence = null;
+		String prevSequence = null;
+
+		Matcher m = Pattern.compile("(1+)").matcher(s); //$NON-NLS-1$
+		if (m.find()) {
+			prevSequence = m.group();
+			currentSequence = m.group();
+
+			while (m.find()) {
+				currentSequence = m.group();
+				if (prevSequence.length() < currentSequence.length()) {
+					prevSequence = m.group();
+				}
+			}
+		}
+
+		if (prevSequence != null) {
+			m = Pattern.compile(prevSequence).matcher(s);
+			while (m.find()) {
+				int[] tmp = new int[2];
+				tmp[0] = m.group().length();
+				tmp[1] = m.start();
+				result.add(tmp);
+			}
+		}
+		return result;
+	}
+
+	private void loadExampleText() {
+		try {
+			URL url = HashingPlugin.getDefault().getBundle().getEntry("/"); //$NON-NLS-1$
+			File template = new File(FileLocator.toFileURL(url).getFile() + "templates" + File.separatorChar //$NON-NLS-1$
+					+ Messages.HashingView_16);
+
+			Scanner scanner = new Scanner(template, "UTF-8"); //$NON-NLS-1$
+			String fileString = scanner.useDelimiter("\\Z").next(); //$NON-NLS-1$
+			scanner.close();
+
+			textInput.setText(fileString);
+			textOutput.setText(fileString);
+
+		} catch (IOException e) {
+			LogUtil.logError(e);
+		}
+	}
 }

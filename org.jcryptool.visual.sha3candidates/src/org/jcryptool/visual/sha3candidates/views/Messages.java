@@ -3,7 +3,7 @@ package org.jcryptool.visual.sha3candidates.views;
 import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "org.jcryptool.visual.SHA3.views.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.jcryptool.visual.sha3candidates.views.messages"; //$NON-NLS-1$
 	public static String HashingView_0;
 	public static String HashingView_1;
 	public static String HashingView_10;
@@ -28,6 +28,7 @@ public class Messages extends NLS {
 	public static String HashingView_mntmSelectAll_text;
 	public static String HashingView_btnUnchanged_text;
 	public static String HashingView_btnChanged_text;
+	public static String HashingView_01;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
