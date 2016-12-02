@@ -217,10 +217,10 @@ public class HashingView extends ViewPart {
 					v16[15]=((long)(BLAKE224.Algorithm.state.t32[1] ^ c32[7]) & 0xffffffffL);
 					
 					blake_tab1.load(v16, textInput.getText().getBytes());
-					tabItem1.setControl(blake_tab0.message3);
-//					tabpage0.setVisible(false);
-//					tabpage1.setVisible(true);
-//					tabpage1.layout();
+//					tabItem1.setControl(blake_tab0.message3);
+					tabpage0.setVisible(false);
+					tabpage1.setVisible(true);
+					tabpage1.layout();
 			}
 			});
 					
