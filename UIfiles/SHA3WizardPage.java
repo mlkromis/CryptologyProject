@@ -37,10 +37,11 @@ import org.eclipse.ui.PlatformUI;
 import org.jcryptool.core.operations.IOperationsConstants;
 import org.jcryptool.core.operations.editors.AbstractEditorService;
 import org.jcryptool.crypto.modern.sha3.SHA3Plugin;
-import org.jcryptool.crypto.modern.sha3.Keccak.BLAKEAction;
+import org.jcryptool.crypto.modern.sha3.blake.BLAKEAction;
 import org.jcryptool.crypto.modern.sha3.echo.ECHOAction;
 import org.jcryptool.crypto.modern.sha3.jh.JHAction;
 import org.jcryptool.crypto.modern.sha3.skein.algorithm.SkeinAction;
+import org.jcryptool.crypto.modern.sha3.groestl.GroestlAction;
 
 /**
  * Implements the sha3 wizardpage
@@ -81,6 +82,10 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     private Text SkeinOutput;
     private Button BlakeHash;
     private Text BlakeOutput;
+    private Button KeccakHash;
+    private Text KeccakOutput;
+    private Button GroestlHash;
+    private Text GroestlOutput;
     /**
      * Option group for choosing create or verify hash
      */
@@ -96,11 +101,13 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     /**
      * The chosen mode (hexeditor, texteditor, hashstream)
      */
-    private int EchoSelect = 1;
+    private int EchoSelect = 0;
     private int JHSelect = 0;
     private int SkeinSelect = 0;
     private int BlakeSelect = 0;
-    private int Bitlength = 0;
+    private int KeccakSelect = 0;
+    private int GroestlSelect = 0;
+    private int Bitlength = 1;
     private boolean Mode = false;
     
     
@@ -128,18 +135,23 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         BitlengthCombo.add("256");
         BitlengthCombo.add("384");
         BitlengthCombo.add("512");
-        BitlengthCombo.select(0);
+        BitlengthCombo.add("1024");
+        BitlengthCombo.select(1);
         createOptionGroup(pageComposite);
         createSaltGroup(pageComposite);
         createAlgorithmGroup(pageComposite);
         CreateHash.setSelection(true);
         HashValue.setEnabled(false);
-        EchoHash.setSelection(true);
         pageComposite.setLayout(new GridLayout());
         createSubmitGroup(pageComposite);
         setControl(pageComposite);
         setPageComplete(mayFinish());
-
+    	//***UNCOMMENT THESE WHEN KECCAK IS IMPLEMENTED
+    	KeccakHash.setVisible(false);
+    	KeccakHash.setSelection(false);
+    	setKeccakText(Messages.WizardError5);
+    	KeccakOutput.setVisible(true);
+    	//***
         PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), SHA3Plugin.PLUGIN_ID + ".wizardhelp");
     }
     
@@ -355,7 +367,7 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         String tempEcho = "";
         EchoOutput.setText(tempEcho);
         EchoOutput.addListener(SWT.Modify, this);
-        EchoOutput.setVisible(true);
+        EchoOutput.setVisible(false);
 
         GridData JHButton = new GridData();
         JHButton.horizontalAlignment = GridData.FILL;
@@ -434,6 +446,59 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         BlakeOutput.addListener(SWT.Modify, this);
         BlakeOutput.setVisible(false);
         
+        GridData KeccakButton = new GridData();
+        KeccakButton.horizontalAlignment = GridData.FILL;
+        KeccakButton.grabExcessHorizontalSpace = true;
+        KeccakButton.grabExcessVerticalSpace = true;
+        KeccakButton.verticalAlignment = GridData.FILL;
+        KeccakButton.widthHint = 200;
+
+        KeccakHash = new Button(AlgorithmGroup, SWT.CHECK);
+        KeccakHash.setText(Messages.WizardMessage21);
+        KeccakHash.setLayoutData(KeccakButton);
+        KeccakHash.addListener(SWT.Selection, this);
+        
+        GridData KeccakText = new GridData();
+        KeccakText.horizontalAlignment = GridData.FILL;
+        KeccakText.grabExcessHorizontalSpace = false;
+        KeccakText.grabExcessVerticalSpace = true;
+        KeccakText.verticalAlignment = GridData.FILL;
+        
+        
+        KeccakOutput = new Text(AlgorithmGroup, SWT.READ_ONLY | SWT.BORDER);
+        KeccakOutput.setLayoutData(KeccakText);
+        String tempKeccak = "";
+        KeccakOutput.setText(tempKeccak);
+        KeccakOutput.addListener(SWT.Modify, this);
+        KeccakOutput.setVisible(false);
+        
+        GridData GroestlButton = new GridData();
+        GroestlButton.horizontalAlignment = GridData.FILL;
+        GroestlButton.grabExcessHorizontalSpace = true;
+        GroestlButton.grabExcessVerticalSpace = true;
+        GroestlButton.verticalAlignment = GridData.FILL;
+        GroestlButton.widthHint = 200;
+
+        GroestlHash = new Button(AlgorithmGroup, SWT.CHECK);
+        GroestlHash.setText(Messages.WizardMessage22);
+        GroestlHash.setLayoutData(GroestlButton);
+        GroestlHash.addListener(SWT.Selection, this);
+        
+        GridData GroestlText = new GridData();
+        GroestlText.horizontalAlignment = GridData.FILL;
+        GroestlText.grabExcessHorizontalSpace = false;
+        GroestlText.grabExcessVerticalSpace = true;
+        GroestlText.verticalAlignment = GridData.FILL;
+        
+        
+        GroestlOutput = new Text(AlgorithmGroup, SWT.READ_ONLY | SWT.BORDER);
+        GroestlOutput.setLayoutData(GroestlText);
+        String tempGroestl = "";
+        JHOutput.setText(tempGroestl);
+        GroestlOutput.addListener(SWT.Modify, this);
+        GroestlOutput.setVisible(false);
+        
+        
         
     }
     
@@ -509,10 +574,70 @@ public class SHA3WizardPage extends WizardPage implements Listener {
      */
     public void handleEvent(Event event) {
         if (event.widget == VerifyHash) {
+        	EchoHash.setVisible(true);
+        	EchoHash.setSelection(false);
+        	EchoOutput.setVisible(false);
+        	EchoSelect = 0;
+        	setEchoText("");
+        	JHHash.setVisible(true);
+        	JHHash.setSelection(false);
+        	JHOutput.setVisible(false);
+        	JHSelect = 0;
+        	setJHText("");
+        	SkeinHash.setVisible(true);
+        	SkeinHash.setSelection(false);
+        	SkeinOutput.setVisible(false);
+        	SkeinSelect = 0;
+        	setSkeinText("");
+        	BlakeHash.setVisible(true);
+        	BlakeHash.setSelection(false);
+        	BlakeOutput.setVisible(false);
+        	BlakeSelect = 0;
+        	setBlakeText("");
+        	KeccakHash.setVisible(true);
+        	KeccakHash.setSelection(false);
+        	KeccakOutput.setVisible(false);
+        	KeccakSelect = 0;
+        	setKeccakText("");
+        	GroestlHash.setVisible(true);
+        	GroestlHash.setSelection(false);
+        	GroestlOutput.setVisible(false);
+        	GroestlSelect = 0;
+        	setGroestlText("");
             Mode = true;
             HashValue.setEnabled(true);
             HashValue.setVisible(true);
         } else if (event.widget == CreateHash) {
+        	EchoHash.setVisible(true);
+        	EchoHash.setSelection(false);
+        	EchoOutput.setVisible(false);
+        	EchoSelect = 0;
+        	setEchoText("");
+        	JHHash.setVisible(true);
+        	JHHash.setSelection(false);
+        	JHOutput.setVisible(false);
+        	JHSelect = 0;
+        	setJHText("");
+        	SkeinHash.setVisible(true);
+        	SkeinHash.setSelection(false);
+        	SkeinOutput.setVisible(false);
+        	SkeinSelect = 0;
+        	setSkeinText("");
+        	BlakeHash.setVisible(true);
+        	BlakeHash.setSelection(false);
+        	BlakeOutput.setVisible(false);
+        	BlakeSelect = 0;
+        	setBlakeText("");
+        	KeccakHash.setVisible(true);
+        	KeccakHash.setSelection(false);
+        	KeccakOutput.setVisible(false);
+        	KeccakSelect = 0;
+        	setKeccakText("");
+        	GroestlHash.setVisible(true);
+        	GroestlHash.setSelection(false);
+        	GroestlOutput.setVisible(false);
+        	GroestlSelect = 0;
+        	setGroestlText("");
             Mode = false;
             HashValue.setEnabled(false);
             HashValue.setVisible(false);
@@ -566,8 +691,57 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         		BlakeSelect = 0;
         	}
         }
-
+        if(event.widget == KeccakHash){
+            if(KeccakHash.getSelection()){
+        		KeccakOutput.setVisible(true);
+        		KeccakSelect= 1;
+        	}
+        	else{
+        		KeccakOutput.setVisible(false);
+        		KeccakSelect = 0;
+        	}
+        }
+        if(event.widget == GroestlHash){
+            if(GroestlHash.getSelection()){
+        		GroestlOutput.setVisible(true);
+        		GroestlSelect= 1;
+        	}
+        	else{
+        		GroestlOutput.setVisible(false);
+        		GroestlSelect = 0;
+        	}
+        }
         if (event.widget == Salt) {
+        	EchoHash.setVisible(true);
+        	EchoHash.setSelection(false);
+        	EchoOutput.setVisible(false);
+        	EchoSelect = 0;
+        	setEchoText("");
+        	JHHash.setVisible(true);
+        	JHHash.setSelection(false);
+        	JHOutput.setVisible(false);
+        	JHSelect = 0;
+        	setJHText("");
+        	SkeinHash.setVisible(true);
+        	SkeinHash.setSelection(false);
+        	SkeinOutput.setVisible(false);
+        	SkeinSelect = 0;
+        	setSkeinText("");
+        	BlakeHash.setVisible(true);
+        	BlakeHash.setSelection(false);
+        	BlakeOutput.setVisible(false);
+        	BlakeSelect = 0;
+        	setBlakeText("");
+        	KeccakHash.setVisible(true);
+        	KeccakHash.setSelection(false);
+        	KeccakOutput.setVisible(false);
+        	KeccakSelect = 0;
+        	setKeccakText("");
+        	GroestlHash.setVisible(true);
+        	GroestlHash.setSelection(false);
+        	GroestlOutput.setVisible(false);
+        	GroestlSelect = 0;
+        	setGroestlText("");
             if (Salt.getSelection()) {
                 SaltGroup.setVisible(true);
             } else
@@ -575,17 +749,108 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         }
         
         if(event.widget == Submit){
-        	computeHash();
+        	if(CreateHash.getSelection()){
+        		computeHash();
+        	}
+        	else{
+        		verifyHash();
+        	}
         }
         if (event.widget == BitlengthCombo) {
+        	EchoHash.setVisible(true);
+        	EchoHash.setSelection(false);
+        	EchoOutput.setVisible(false);
+        	EchoSelect = 0;
+        	setEchoText("");
+        	JHHash.setVisible(true);
+        	JHHash.setSelection(false);
+        	JHOutput.setVisible(false);
+        	JHSelect = 0;
+        	setJHText("");
+        	SkeinHash.setVisible(true);
+        	SkeinHash.setSelection(false);
+        	SkeinOutput.setVisible(false);
+        	SkeinSelect = 0;
+        	setSkeinText("");
+        	BlakeHash.setVisible(true);
+        	BlakeHash.setSelection(false);
+        	BlakeOutput.setVisible(false);
+        	BlakeSelect = 0;
+        	setBlakeText("");
+        	KeccakHash.setVisible(true);
+        	KeccakHash.setSelection(false);
+        	KeccakOutput.setVisible(false);
+        	KeccakSelect = 0;
+        	setKeccakText("");
+        	GroestlHash.setVisible(true);
+        	GroestlHash.setSelection(false);
+        	GroestlOutput.setVisible(false);
+        	GroestlSelect = 0;
+        	setGroestlText("");
             if (BitlengthCombo.getSelectionIndex() == 0) {
+            	SkeinHash.setVisible(false);
+            	SkeinHash.setSelection(false);
+            	setSkeinText(Messages.WizardError5);
+            	SkeinOutput.setVisible(true);
+            	//***UNCOMMENT THESE WHEN KECCAK IS IMPLEMENTED
+            	KeccakHash.setVisible(false);
+            	KeccakHash.setSelection(false);
+            	setKeccakText(Messages.WizardError5);
+            	KeccakOutput.setVisible(true);
+            	//***
                 Bitlength = 0;
             } else if (BitlengthCombo.getSelectionIndex() == 1) {
+            	//***UNCOMMENT THESE WHEN KECCAK IS IMPLEMENTED
+            	KeccakHash.setVisible(false);
+            	KeccakHash.setSelection(false);
+            	setKeccakText(Messages.WizardError5);
+            	KeccakOutput.setVisible(true);
+            	//***
                 Bitlength = 1;
             } else if (BitlengthCombo.getSelectionIndex() == 2) {
+            	SkeinHash.setVisible(false);
+            	SkeinHash.setSelection(false);
+            	setSkeinText(Messages.WizardError5);
+            	SkeinOutput.setVisible(true);
+            	//***UNCOMMENT THESE WHEN KECCAK IS IMPLEMENTED
+            	KeccakHash.setVisible(false);
+            	KeccakHash.setSelection(false);
+            	setKeccakText(Messages.WizardError5);
+            	KeccakOutput.setVisible(true);
+            	//***
                 Bitlength = 2;
             } else if (BitlengthCombo.getSelectionIndex() == 3) {
-                Bitlength = 3;
+            	//***UNCOMMENT THESE WHEN KECCAK IS IMPLEMENTED
+            	KeccakHash.setVisible(false);
+            	KeccakHash.setSelection(false);
+            	setKeccakText(Messages.WizardError5);
+            	KeccakOutput.setVisible(true);
+            	//***
+            	Bitlength = 3;
+            } else if (BitlengthCombo.getSelectionIndex() == 4) {
+            	EchoHash.setVisible(false);
+            	EchoHash.setSelection(false);
+            	setEchoText(Messages.WizardError5);
+            	EchoOutput.setVisible(true);
+            	JHHash.setVisible(false);
+            	JHHash.setSelection(false);
+            	setJHText(Messages.WizardError5);
+            	JHOutput.setVisible(true);
+            	BlakeHash.setVisible(false);
+            	BlakeHash.setSelection(false);
+            	setBlakeText(Messages.WizardError5);
+            	BlakeOutput.setVisible(true);
+            	GroestlHash.setVisible(false);
+            	GroestlHash.setSelection(false);
+            	setGroestlText(Messages.WizardError5);
+            	GroestlOutput.setVisible(true);
+            	//***UNCOMMENT THESE WHEN KECCAK IS IMPLEMENTED
+            	KeccakHash.setVisible(false);
+            	KeccakHash.setSelection(false);
+            	setKeccakText(Messages.WizardError5);
+            	KeccakOutput.setVisible(true);
+            	//***
+            	Bitlength = 4;
             }
         }
         setPageComplete(mayFinish());
@@ -649,7 +914,26 @@ public class SHA3WizardPage extends WizardPage implements Listener {
         return BlakeOn;
     }
     
-
+    public String getKeccakSelect() {
+        String KeccakOn = "";
+        if(KeccakSelect == 1){
+        	KeccakOn = "ON";
+        }
+        else{
+        	KeccakOn = "OFF";
+        }
+        return KeccakOn;
+    }
+    public String getGreostlSelect() {
+        String GroestlOn = "";
+        if(GroestlSelect == 1){
+        	GroestlOn = "ON";
+        }
+        else{
+        	GroestlOn = "OFF";
+        }
+        return GroestlOn;
+    }
     public String getSalt() {
         return SaltEcho;
     }
@@ -664,19 +948,6 @@ public class SHA3WizardPage extends WizardPage implements Listener {
      * @return
      */
     public int getBitLength() {
-        if (getSkeinSelect().compareTo("ON") == 0) {
-            switch (Bitlength) {
-                case 0:
-                    Bitlength = 256;
-                    break;
-                case 1:
-                    Bitlength = 512;
-                    break;
-                case 2:
-                    Bitlength = 1024;
-                    break;
-            }
-        } else {
             switch (Bitlength) {
                 case 0:
                     Bitlength = 224;
@@ -690,7 +961,8 @@ public class SHA3WizardPage extends WizardPage implements Listener {
                 case 3:
                     Bitlength = 512;
                     break;
-            }
+                case 4:
+                	Bitlength = 1024;
         }
         return Bitlength;
     }
@@ -721,6 +993,12 @@ public class SHA3WizardPage extends WizardPage implements Listener {
     public void setBlakeText(String HashDisplay){
     	BlakeOutput.setText(HashDisplay);
     }
+    public void setKeccakText(String HashDisplay){
+    	KeccakOutput.setText(HashDisplay);
+    }
+    public void setGroestlText(String HashDisplay){
+    	GroestlOutput.setText(HashDisplay);
+    }
     
     private boolean mayFinish() {
         /*
@@ -729,6 +1007,89 @@ public class SHA3WizardPage extends WizardPage implements Listener {
          */
         return true;
     }
+    
+    public void verifyHash(){    	
+        byte[] EchoHashValue = null;
+        byte[] JHHashValue = null;
+        byte[] SkeinHashValue = null;
+        byte[] BlakeHashValue = null;
+        byte[] KeccakHashValue = null;
+        byte[] GreostlHashValue = null;
+        int Bitlength = getBitLength();
+        String Salt = getSalt();
+        String Input = getInputText();
+        String compText = getHashValue();
+    	
+    	
+    	ECHOAction runECHO = new ECHOAction();
+		if (Salt.compareTo("") == 0)
+			EchoHashValue = runECHO.run(Bitlength, Input);
+		else
+			EchoHashValue = runECHO.run(Bitlength, Input,Salt);
+		//EchoOutput.setVisible(true);
+		if(toHex(EchoHashValue).compareTo(compText) == 0){
+	    	setEchoText(Messages.WizardMessage11);
+		}
+		else{
+			setEchoText(Messages.WizardMessage12);
+		}
+		JHAction runJH = new JHAction();
+		JHHashValue = runJH.run(Bitlength, Input);
+    	//JHOutput.setVisible(true);
+		if(toHex(JHHashValue).compareTo(compText) == 0){
+	    	setJHText(Messages.WizardMessage11);
+		}
+		else{
+			setJHText(Messages.WizardMessage12);
+		}
+		
+      	SkeinAction runSkein = new SkeinAction();
+      	SkeinHashValue = runSkein.run(Bitlength, Input, Bitlength);
+    	//SkeinOutput.setVisible(true);
+      	if(toHex(SkeinHashValue).compareTo(compText) == 0){
+        	setSkeinText(Messages.WizardMessage11);
+      	}
+      	else{
+      		setSkeinText(Messages.WizardMessage12);
+      	}
+      	
+		BLAKEAction runBlake = new BLAKEAction();
+		if(Salt.compareTo("") == 0){
+			BlakeHashValue = runBlake.run(Bitlength, Input);
+		}
+		else{
+			BlakeHashValue = runBlake.run(Bitlength, Input,Salt);
+		}
+    	//BlakeOutput.setVisible(true);
+		if(toHex(BlakeHashValue).compareTo(compText) == 0){
+	    	setBlakeText(Messages.WizardMessage11);
+		}
+		else{
+			setBlakeText(Messages.WizardMessage12);
+		}
+		/*
+      	KeccakAction runKeccak = new KeccakAction();
+      	KeccakHashValue = runKeccak.run(Bitlength, Input, Bitlength);
+    	//KeccakOutput.setVisible(true);
+      	if(toHex(KeccakHashValue).compareTo(compText) == 0){
+        	setKeccakText(Messages.WizardMessage11);
+      	}
+      	else{
+      		setKeccakText(Messages.WizardMessage12);
+      	}
+      	*/
+      	GroestlAction runGroestl = new GroestlAction();
+      	GroestlHashValue = runGroestl.run(Bitlength, Input, Bitlength);
+    	//GroestlOutput.setVisible(true);
+      	if(toHex(GroestlHashValue).compareTo(compText) == 0){
+        	setGreostlText(Messages.WizardMessage11);
+      	}
+      	else{
+      		setGroestlText(Messages.WizardMessage12);
+      	}
+    
+    }
+    
     
     public void computeHash(){
                 /* Get all the important information of the wizard */
@@ -742,38 +1103,47 @@ public class SHA3WizardPage extends WizardPage implements Listener {
                 byte[] JHHashValue = null;
                 byte[] SkeinHashValue = null;
                 byte[] BlakeHashValue = null;
+                byte[] KeccakHashValue = null;
+                byte[] GroestlHashValue = null;
                 byte[] TestString = "HelloTest".getBytes();
                 String Salt = getSalt();
                 String Input = getInputText();
                 /* Check if the hash shall be created or verified */
                 if (Mode.compareTo("CreateHash") == 0) {
-                    if (EchoOn.compareTo("ON") == 0) {
-                        ECHOAction runECHO = new ECHOAction();
-                        if (Salt.compareTo("") == 0)
-                            EchoHashValue = runECHO.run(Bitlength, Input);
-                        else
-                            EchoHashValue = runECHO.run(Bitlength, Input,Salt);
-                        setEchoText(toHex(EchoHashValue));
-                    
-                    
-                    } if (JHOn.compareTo("ON") == 0) {
-                        JHAction runJH = new JHAction();
-                        JHHashValue = runJH.run(Bitlength, Input);
-                        setJHText(toHex(JHHashValue));
-                    } if (SkeinOn.compareTo("ON") == 0) {
-                        SkeinAction runSkein = new SkeinAction();
-                        SkeinHashValue = runSkein.run(Bitlength, Input, Bitlength);
-                        setSkeinText(toHex(SkeinHashValue));
-                    }
-                } if (BlakeOn.compareTo("ON") == 0) {
-                    BLAKEAction runBlake = new BLAKEAction();
-                    if(Salt.compareTo("") == 0){
-                    	BlakeHashValue = runBlake.run(Bitlength, Input);
-                    }
-                    else{
-                    	BlakeHashValue = runBlake.run(Bitlength, Input,Salt);
-                    }
-                    setBlakeText(toHex(BlakeHashValue));
+                    //if (EchoOn.compareTo("ON") == 0) {
+                    		ECHOAction runECHO = new ECHOAction();
+                    		if (Salt.compareTo("") == 0)
+                    			EchoHashValue = runECHO.run(Bitlength, Input);
+                    		else
+                    			EchoHashValue = runECHO.run(Bitlength, Input,Salt);
+                    		setEchoText(toHex(EchoHashValue));
+                    //} if (JHOn.compareTo("ON") == 0) {
+                    		JHAction runJH = new JHAction();
+                    		JHHashValue = runJH.run(Bitlength, Input);
+                    		setJHText(toHex(JHHashValue));
+                    //} if (SkeinOn.compareTo("ON") == 0) {
+                          	SkeinAction runSkein = new SkeinAction();
+                          	SkeinHashValue = runSkein.run(Bitlength, Input, Bitlength);
+                          	setSkeinText(toHex(SkeinHashValue));
+                    //}
+                //} if (BlakeOn.compareTo("ON") == 0) {
+                		BLAKEAction runBlake = new BLAKEAction();
+                		if(Salt.compareTo("") == 0){
+                			BlakeHashValue = runBlake.run(Bitlength, Input);
+                		}
+                		else{
+                			BlakeHashValue = runBlake.run(Bitlength, Input,Salt);
+                		}
+                		setBlakeText(toHex(BlakeHashValue));
+                		/*
+                		KeccakAction runKeccak = new KeccakAction();
+                		KeccakHashValue = runKeccak.run(Bitlength, Input);
+                		setKeccakText(toHex(KeccakHashValue));
+                		*/
+                		GroestlAction runGroestl = new GroestlAction();
+                		GroestlHashValue = runGroestl.run(Bitlength, Input);
+                		setGroestlText(toHex(GroestlHashValue));
+                //}
                 }
     }
     
