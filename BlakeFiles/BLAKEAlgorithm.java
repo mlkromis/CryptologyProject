@@ -7,7 +7,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
 // -----END DISCLAIMER-----
-package org.jcryptool.crypto.modern.sha3.Keccak;
+package org.jcryptool.crypto.modern.sha3.blake;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
 import java.util.Arrays;
