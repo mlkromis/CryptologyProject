@@ -41,10 +41,13 @@ public class Messages extends NLS {
     public static String WizardMessage18;
     public static String WizardMessage19;
     public static String WizardMessage20;
+    public static String WizardMessage21;
+    public static String WizardMessage22;
     public static String WizardError1;
     public static String WizardError2;
     public static String WizardError3;
     public static String WizardError4;
+    public static String WizardError5;
     static {
         NLS.initializeMessages(BUNDLE_NAME, Messages.class);
     }
