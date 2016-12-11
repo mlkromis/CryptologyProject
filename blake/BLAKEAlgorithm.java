@@ -79,7 +79,7 @@ public class BLAKEAlgorithm {
             state.salt64[3] = 0;
         }
 
-        status = Hash(hashbitlen, data, 8);
+        status = Hash(hashbitlen, data, data.length);
     }
 
     BLAKEAlgorithm(int hashbitlen, byte[] data, String salt) {
@@ -89,7 +89,7 @@ public class BLAKEAlgorithm {
 
         AddSalt(hexStrToByteField(salt));
 
-        status = Hash(hashbitlen, data, 8);
+        status = Hash(hashbitlen, data, data.length);
 
     }
 
