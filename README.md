@@ -1,8 +1,5 @@
 1. If the program in the folder doesn't work, try the program in the zip file.
-2. SHA-3 candidates list is on the official website of NIST(National Institute of Standards and Technology) below.
-http://csrc.nist.gov/groups/ST/hash/sha-3/Round1/submissions_rnd1.html
-
-The submitted materials of the candidates can all be found on this website. 
+2. SHA-3 candidates list is on the official website of NIST(National Institute of Standards and Technology) below. http://csrc.nist.gov/groups/ST/hash/sha-3/Round1/submissions_rnd1.html. The submitted materials of the candidates can all be found on this website. 
 
 3.  For visualization, please add the commands below into the org.jcryptool.visual.feature/feature.xml. Just take a look at the content of the feature.xml before you do anything. You know where to add those commands.
 
