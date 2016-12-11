@@ -79,7 +79,7 @@ public class BLAKEAlgorithm {
             state.salt64[3] = 0;
         }
 
-        status = Hash(hashbitlen, data, data.length);
+        status = Hash(hashbitlen, data, data.length*8);
     }
 
     BLAKEAlgorithm(int hashbitlen, byte[] data, String salt) {
@@ -89,7 +89,7 @@ public class BLAKEAlgorithm {
 
         AddSalt(hexStrToByteField(salt));
 
-        status = Hash(hashbitlen, data, data.length);
+        status = Hash(hashbitlen, data, data.length*8);
 
     }
 
@@ -408,6 +408,11 @@ public class BLAKEAlgorithm {
                 state.t32[1]++;
 
             compress32(state.data32);
+            
+            byte[] temp = new byte[(int) (data.length-fill)];
+            System.arraycopy(data, (int)fill, temp, 0, (int)(data.length-fill));
+            data = temp;
+            
             databitlen -= (fill << 3);
 
             left = 0;
@@ -415,13 +420,16 @@ public class BLAKEAlgorithm {
 
         /* compress data until enough for a block */
         while (databitlen >= 512) {
-
             /* update counter */
             state.t32[0] += 512;
-
             if (state.t32[0] == 0)
                 state.t32[1]++;
             compress32(data);
+            
+            byte[] temp = new byte[data.length-64];
+            System.arraycopy(data, 64, temp, 0, data.length-64);
+            data = temp;
+            
             databitlen -= 512;
         }
 
@@ -457,6 +465,10 @@ public class BLAKEAlgorithm {
 
             compress64(state.data64);
 
+            byte[] temp = new byte[(int) (data.length-fill)];
+            System.arraycopy(data, (int)fill, temp, 0, (int)(data.length-fill));
+            data = temp;
+            
             databitlen -= (fill << 3);
 
             left = 0;
@@ -468,6 +480,11 @@ public class BLAKEAlgorithm {
             /* update counter */
             state.t64[0] += 1024;
             compress64(data);
+            
+            byte[] temp = new byte[data.length-128];
+            System.arraycopy(data, 128, temp, 0, data.length-128);
+            data = temp;
+            
             databitlen -= 1024;
         }
 
