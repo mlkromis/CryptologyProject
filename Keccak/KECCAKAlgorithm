@@ -1,0 +1,385 @@
+// -----BEGIN DISCLAIMER-----
+/*******************************************************************************
+ * Copyright (c) 2010 JCrypTool team and contributors
+ *
+ * All rights reserved. This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *******************************************************************************/
+// -----END DISCLAIMER-----
+package org.jcryptool.crypto.modern.sha3.Keccak;
+import java.nio.ByteBuffer;
+import java.nio.ShortBuffer;
+import java.util.Arrays;
+
+/***********************************/
+//r,c,b,n values for this implementation of Keccak
+//r (bit rate in bits) = 1024
+//c (capacity in bits) = 576
+//b (lane length in bits) = 1600
+//n (length of output in bits) -> selected by user
+
+public class KECCAKAlgorithm{
+    private int SUCCESS=0;
+    private int FAIL=1;
+    private int BAD_HASHLEN=2;
+    
+    private KECCAKHashState state;
+    private byte hashval[];
+    private int status;
+    
+    // Round constants
+    public static long RC[] =
+        {
+        		0x0000000000000001L,
+                0x0000000000008082L,
+                0x800000000000808AL,
+                0x8000000080008000L,
+                0x000000000000808BL,
+                0x0000000080000001L,
+                0x8000000080008081L,
+                0x8000000000008009L,
+                0x000000000000008AL,
+                0x0000000000000088L,
+                0x0000000080008009L,
+                0x000000008000000AL,
+                0x000000008000808BL,
+                0x800000000000008BL,
+                0x8000000000008089L,
+                0x8000000000008003L,
+                0x8000000000008002L,
+                0x8000000000000080L,
+                0x000000000000800AL,
+                0x800000008000000AL,
+                0x8000000080008081L,
+                0x8000000000008080L,
+                0x0000000080000001L,
+                0x8000000080008008L
+      };    
+    //Rotation offsets
+    public static final int r[]=
+    {
+    	0,    36,     3,    41,    18,
+    	1,    44,    10,    45,     2,
+    	62,    6,    43,    15,    61,
+    	28,   55,    25,    21,    56,
+    	27,   20,    39,     8,    14
+    };
+
+    
+    public void Keccak_Algorithm(int hashbitlen, byte[] data){
+       
+    	this.status = FAIL;
+        this.hashval = new byte[hashbitlen/8];
+        this.state = new KECCAKHashState();
+        state.Keccak_HashState();
+        status = Hash(hashbitlen, data, state);
+    
+    }
+
+    
+    private int Hash(int hashbitlen,byte[] data, KECCAKHashState state){
+    	if ((hashbitlen != 224) && (hashbitlen != 256) && (hashbitlen != 384) && (hashbitlen != 512))
+            return BAD_HASHLEN; // Only the four fixed output lengths available through this API	
+    	int ret = Init(hashbitlen, data, state);
+        if ( ret != SUCCESS ){
+        	return ret;
+        }
+        ret = Absorb(state, data);
+        if ( ret != SUCCESS ){
+        	return ret;
+        }        
+        ret = Squeeze(state, data);
+        return ret;
+    }
+    
+    private int Init(int hashbitlen, byte[] data, KECCAKHashState state){
+        switch(hashbitlen) {
+	        case 0: // Default parameters, arbitrary length output
+	            state.r = 1024;
+	            state.c = 576;
+	            break;
+	        case 224:
+	            state.r = 1152;
+	            state.c = 448;
+	            break;
+	        case 256:
+	            state.r = 1088;
+	            state.c = 512;
+	            break;
+	        case 384:
+	            state.r = 832;
+	            state.c = 768;
+	            break;
+	        case 512:
+	            state.r = 576;
+	            state.c = 1024;
+	            break;
+	        default:
+	            return BAD_HASHLEN;
+	    }
+        state.hashbitlen = hashbitlen;
+        state.bitsInQueue = 0;
+        state.squeezing = false;
+        state.bitsAvailableForSqueezing = 0;
+        for(int i=0; i<state.n; i++){
+        	state.s[i] = 0;     
+        }
+        //Currently only accepts ascii chars so databitLen is always a multiple of 8
+        state.databitlen = data.length*8;
+        return SUCCESS;
+        //return self.padData(data);
+    }
+    
+    private int Absorb(KECCAKHashState state, byte[] data){
+    	long wholeBlocks, curData,i,j,k,l;
+    	if (state.bitsInQueue%8 != 0){
+    		return 1;
+    	}
+    	if(state.squeezing){
+    		return 1;
+    	}
+    	i = 0;
+    	while(i<state.databitlen){
+    		if ((state.bitsInQueue == 0) && (state.databitlen >= state.r) && (i <= (state.databitlen-state.r))) {
+    			wholeBlocks = (state.databitlen-i)/state.r;
+    			curData = i/8;
+    			for(j=0;j<wholeBlocks;j++,curData+=(state.r/8)){
+    				for(k = 0;k<state.r/8;k++){
+    					state.s[k] = data[curData+k];
+    				}
+    				for(l=0; l<state.n;l++){
+    					theta(state.s);
+    					rho(state.s);
+    					pi(state.s);
+    					chi(state.s);
+    					iota(state.s,state.n);
+    				}
+    			}
+    			i += wholeBlocks*state.r;
+    		} else {
+                int partialBlock = (int)(state.databitlen - i);
+                if (partialBlock+state.bitsInQueue > state.r)
+                    partialBlock = state.r-state.bitsInQueue;
+                int partialByte = partialBlock % 8;
+                partialBlock -= partialByte;
+                //state.dataQueue+state.bitsInQueue/8 = data+i/8;
+                state.bitsInQueue += partialBlock;
+                i += partialBlock;
+                if (state.bitsInQueue == state.r)
+                    //RUN PERMUTATION!
+                	//AbsorbQueue(state);
+                if (partialByte > 0) {
+                    char mask = (char)(1 << partialByte-1);
+                    state.dataQueue[state.bitsInQueue/8] = data[i/8] & mask;
+                    state.bitsInQueue += partialByte;
+                    i += partialByte;
+                }
+    		}
+    	}
+    	return SUCCESS;
+   }
+    	
+    private int Squeeze(KECCAKHashState state, byte[] data){
+    	
+    	if(!state.squeezing){
+    		SwitchToSqueezingPhase(state,data);
+    	}
+    	if ((state.hashbitlen % 8) != 0)
+            return 1; 
+    	long i=0;
+    	while(i<state.hashbitlen){
+    		if(state.bitsAvailableForSqueezing == 0){
+				for(long l=0; l<state.n;l++){
+					theta(state.s);
+					rho(state.s);
+					pi(state.s);
+					chi(state.s);
+					iota(state.s, state.n);
+				}
+    		}
+            long partialBlock = state.bitsAvailableForSqueezing;
+            if ((long)partialBlock > state.hashbitlen - i)
+                partialBlock = (int)(state.hashbitlen - i);
+            //COPY TO DATA QUEUE!
+            //memcpy(output+i/8, state->dataQueue+(state->rate-state->bitsAvailableForSqueezing)/8, partialBlock/8);
+            state.bitsAvailableForSqueezing -= partialBlock;
+            i += partialBlock;
+    	}
+    	return SUCCESS;
+    }
+    
+    
+    /*
+    private int padData(byte[] data){
+    	//Pad M with the pad10*1 padding rule to reach a length multiple of r bits
+        //M: message pair (length in bits, string of hex characters ('9AFC...')
+        //n: length in bits (must be a multiple of 8)
+        //Example: pad10star1([60, 'BA594E0FB9EBBD30'],8) returns 'BA594E0FB9EBBD93'
+        
+
+        //Check the length of the provided string
+        if (state.datalen%2!=0)
+            //Pad with one '0' to reach correct lengt
+            data[state.datalen]='0';
+        if (state.datalen>state.hashval)
+            raise KeccakError.KeccakError("rate must be greater than the output length");
+        nr_bytes_filled=state.datalen;
+        nbr_bits_filled=0;
+        n = state.hashval;
+        l = (state.datalen*8) % n;
+        if ((n-8) <= l <= (n-2)){
+            if (nbr_bits_filled == 0)
+                my_byte = 0;
+                
+            else{
+            	raise KeccakError.KeccakError("error in padding message 1");
+            	//my_byte=int(my_string[nr_bytes_filled*2:nr_bytes_filled*2+2],16)
+            }     
+            my_byte=(my_byte>>(8-nbr_bits_filled))
+            my_byte=my_byte+2**(nbr_bits_filled)+2**7
+            my_byte="%02X" % my_byte
+            my_string=my_string[0:nr_bytes_filled*2]+my_byte
+        }
+        else{
+            if (nbr_bits_filled == 0)
+                my_byte = 0
+            else{
+            	raise KeccakError.KeccakError("error in padding message 2");
+            	//my_byte=int(my_string[nr_bytes_filled*2:nr_bytes_filled*2+2],16)
+            }
+            my_byte=(my_byte>>(8-nbr_bits_filled))
+            my_byte=my_byte+2**(nbr_bits_filled)
+            my_byte="%02X" % my_byte
+            my_string=my_string[0:nr_bytes_filled*2]+my_byte
+            while((8*len(my_string)//2)%n < (n-8)):
+                my_string=my_string+'00'
+            my_string = my_string+'80'
+
+        return my_string
+	
+    }
+        */
+    
+    void SwitchToSqueezingPhase(KECCAKHashState state, byte[] data)
+    {
+        // Note: the bits are numbered from 0=LSB to 7=MSB
+        if (state.bitsInQueue + 1 == state.r) {
+            //state.dataQueue[state.bitsInQueue/8 ] |= 1 << (state.bitsInQueue % 8);
+            //RUN PERMUTATION!
+            //AbsorbQueue(state);
+            //memset(state.dataQueue, 0, state.rate/8);
+        }
+        else {
+            //COPY TO DATA QUEUE!
+        	//memset(state.dataQueue + (state->bitsInQueue+7)/8, 0, state->rate/8 - (state->bitsInQueue+7)/8);
+            //state.dataQueue[state.bitsInQueue/8 ] |= 1 << (state.bitsInQueue % 8);
+        }
+        state.dataQueue[(state.r-1)/8] |= 1 << ((state.r-1) % 8);
+        //RUN PERMUTATION!
+        //AbsorbQueue(state);
+        
+        //COPY TO QUEUE!
+        //KeccakExtract(state.s, state.dataQueue, state.r/64);
+        state.bitsAvailableForSqueezing = state.r;
+        state.squeezing = true;
+    }
+        
+        void theta(long[] A)
+        {
+            int x, y;
+            long[] C = new long[5];
+            long[] D = new long[5];
+
+            for(x=0; x<5; x++) {
+                C[x] = 0; 
+                for(y=0; y<5; y++) 
+                    C[x] ^= A[index(x, y)];
+            }
+            for(x=0; x<5; x++)
+                D[x] = ROL64(C[(x+1)%5], 1) ^ C[(x+4)%5];
+            for(x=0; x<5; x++)
+                for(y=0; y<5; y++)
+                    A[index(x, y)] ^= D[x];
+        }
+
+        void rho(long[] A)
+        {
+        	int x, y;
+
+            for(x=0; x<5; x++) for(y=0; y<5; y++)
+                A[index(x, y)] = ROL64(A[index(x, y)], r[index(x, y)]);
+        }
+
+        void pi(long[] A)
+        {
+            int x, y;
+            long[] tempA = new long[25];
+
+            for(x=0; x<5; x++) for(y=0; y<5; y++)
+                tempA[index(x, y)] = A[index(x, y)];
+            for(x=0; x<5; x++) for(y=0; y<5; y++)
+                A[index(0*x+1*y, 2*x+3*y)] = tempA[index(x, y)];
+        }
+
+        void chi(long[] A)
+        {
+            int x, y;
+            long[] C = new long[5];
+
+            for(y=0; y<5; y++) { 
+                for(x=0; x<5; x++)
+                    C[x] = A[index(x, y)] ^ ((~A[index(x+1, y)]) & A[index(x+2, y)]);
+                for(x=0; x<5; x++)
+                    A[index(x, y)] = C[x];
+            }
+        }
+
+        void iota(long[] A, int indexRound)
+        {
+            A[index(0, 0)] ^= RC[indexRound];
+        }
+	
+        public long ROL64(long a,int offset){
+        	if(offset != 0){
+        		return ((long)a << (long)offset) ^ ((long)a >> ((long)64-(long)offset));
+        	}else{
+        		return a;
+        	}
+        }
+        
+    public int getStatus(){
+        return this.status;
+    }
+
+    public byte[] getHash(){
+    	StringBuilder tb = new StringBuilder();
+        return this.hashval;
+    }
+    
+	public double logOfBase(int base, int num) {
+	    return Math.log(num) / Math.log(base);
+	}
+
+	public int index(int x, int y){
+		int ret = (x%5)+5*(y%5);
+		return ret;
+	}
+    
+    
+	private byte[] hexStrToByteField(String hexStr){
+        if(hexStr.length()%2==0){
+            byte [] bytes = new byte[hexStr.length()/2];
+            int i,j;
+
+            try{
+                for(i=0,j=0;j<hexStr.length();i++, j+=2)
+                       bytes[i] = (byte)Integer.parseInt(hexStr.substring(j,j+2), 16);
+            }catch(Exception e){
+                return null;
+            }
+            return bytes;
+        }else
+            return null;
+        }
+    }
