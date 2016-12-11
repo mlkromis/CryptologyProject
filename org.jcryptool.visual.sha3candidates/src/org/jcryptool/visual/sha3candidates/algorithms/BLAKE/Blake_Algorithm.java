@@ -143,7 +143,7 @@ public class Blake_Algorithm {
             state.salt64[3] = 0;  
         }
 
-        status = Hash(hashbitlen, data, 8);
+        status = Hash(hashbitlen, data, 8*data.length);
     }
 
     Blake_Algorithm(int hashbitlen, byte[] data, String salt){
@@ -153,7 +153,7 @@ public class Blake_Algorithm {
 
         AddSalt(hexStrToByteField(salt));
 
-        status = Hash(hashbitlen, data, 8);
+        status = Hash(hashbitlen, data, 8*data.length);
         
     }
     
