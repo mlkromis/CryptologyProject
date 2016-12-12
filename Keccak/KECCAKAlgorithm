@@ -74,7 +74,7 @@ public class KECCAKAlgorithm{
         this.state = new KECCAKHashState();
         state.Keccak_HashState();
         status = Hash(hashbitlen, data, state);
-    
+        this.hashval = state.output;
     }
 
     
@@ -121,8 +121,10 @@ public class KECCAKAlgorithm{
         state.hashbitlen = hashbitlen;
         state.bitsInQueue = 0;
         state.squeezing = false;
+        state.dataQueue = new byte[state.r];
+        state.output = new byte[state.hashbitlen/8];
         state.bitsAvailableForSqueezing = 0;
-        for(int i=0; i<state.n; i++){
+        for(int i=0; i<state.b/8; i++){
         	state.s[i] = 0;     
         }
         //Currently only accepts ascii chars so databitLen is always a multiple of 8
@@ -132,29 +134,32 @@ public class KECCAKAlgorithm{
     }
     
     private int Absorb(KECCAKHashState state, byte[] data){
-    	long wholeBlocks, curData,i,j,k,l;
+    	long wholeBlocks;
+    	int curData;
     	if (state.bitsInQueue%8 != 0){
     		return 1;
     	}
     	if(state.squeezing){
     		return 1;
     	}
-    	i = 0;
+    	int i = 0;
     	while(i<state.databitlen){
     		if ((state.bitsInQueue == 0) && (state.databitlen >= state.r) && (i <= (state.databitlen-state.r))) {
     			wholeBlocks = (state.databitlen-i)/state.r;
     			curData = i/8;
-    			for(j=0;j<wholeBlocks;j++,curData+=(state.r/8)){
-    				for(k = 0;k<state.r/8;k++){
-    					state.s[k] = data[curData+k];
+    			for(int j=0;j<wholeBlocks;j++,curData+=(state.r/8)){
+    				for(int k = 0;k<state.r/8;k++){
+    					state.s[k] ^= data[curData+k];
     				}
-    				for(l=0; l<state.n;l++){
-    					theta(state.s);
-    					rho(state.s);
-    					pi(state.s);
-    					chi(state.s);
-    					iota(state.s,state.n);
+    				fromBytesToWords(state);
+    				for(int l=0; l<state.n;l++){
+    					theta(state.sWords);
+    					rho(state.sWords);
+    					pi(state.sWords);
+    					chi(state.sWords);
+    					iota(state.sWords,l);
     				}
+    				fromWordsToBytes(state);
     			}
     			i += wholeBlocks*state.r;
     		} else {
@@ -163,15 +168,31 @@ public class KECCAKAlgorithm{
                     partialBlock = state.r-state.bitsInQueue;
                 int partialByte = partialBlock % 8;
                 partialBlock -= partialByte;
-                //state.dataQueue+state.bitsInQueue/8 = data+i/8;
+                for(int m=0; m < partialBlock/8;m++){
+                	state.dataQueue[(state.bitsInQueue/8)+m] = data[(i/8)+m];
+                }
                 state.bitsInQueue += partialBlock;
                 i += partialBlock;
-                if (state.bitsInQueue == state.r)
-                    //RUN PERMUTATION!
-                	//AbsorbQueue(state);
+                if (state.bitsInQueue == state.r){
+        			for(int j = 0;j<state.r/8;j++){
+        				state.s[j] ^= state.dataQueue[j];
+        			}
+        			fromBytesToWords(state);
+        			for(int l=0; l<state.n;l++){
+        				theta(state.sWords);
+        				rho(state.sWords);
+        				pi(state.sWords);
+        				chi(state.sWords);
+        				iota(state.sWords,l);
+        			}
+        			fromWordsToBytes(state);
+        			for(int m = 0;m<state.r/8;m++){
+        				state.dataQueue[m] = 0;
+        			}
+                }
                 if (partialByte > 0) {
                     char mask = (char)(1 << partialByte-1);
-                    state.dataQueue[state.bitsInQueue/8] = data[i/8] & mask;
+                    state.dataQueue[state.bitsInQueue/8] = (byte)(data[i/8] & mask);
                     state.bitsInQueue += partialByte;
                     i += partialByte;
                 }
@@ -187,100 +208,79 @@ public class KECCAKAlgorithm{
     	}
     	if ((state.hashbitlen % 8) != 0)
             return 1; 
-    	long i=0;
+    	int i=0;
     	while(i<state.hashbitlen){
     		if(state.bitsAvailableForSqueezing == 0){
-				for(long l=0; l<state.n;l++){
-					theta(state.s);
-					rho(state.s);
-					pi(state.s);
-					chi(state.s);
-					iota(state.s, state.n);
+    			fromBytesToWords(state);
+				for(int l=0; l<state.n;l++){
+					theta(state.sWords);
+					rho(state.sWords);
+					pi(state.sWords);
+					chi(state.sWords);
+					iota(state.sWords, l);
 				}
+				fromWordsToBytes(state);
+				for(int j=0;i<state.r/8;j++){
+					state.dataQueue[j]= state.s[j];
+				}
+				state.bitsAvailableForSqueezing = state.r;
     		}
-            long partialBlock = state.bitsAvailableForSqueezing;
-            if ((long)partialBlock > state.hashbitlen - i)
-                partialBlock = (int)(state.hashbitlen - i);
-            //COPY TO DATA QUEUE!
-            //memcpy(output+i/8, state->dataQueue+(state->rate-state->bitsAvailableForSqueezing)/8, partialBlock/8);
+            int partialBlock = state.bitsAvailableForSqueezing;
+            if (partialBlock > state.hashbitlen - i)
+                partialBlock = (state.hashbitlen - i);
+            for(int k=0;k<partialBlock/8;k++){
+            	state.output[(i/8)+k] = state.dataQueue[(state.r-state.bitsAvailableForSqueezing)/8+k];
+            }
             state.bitsAvailableForSqueezing -= partialBlock;
             i += partialBlock;
     	}
     	return SUCCESS;
     }
     
-    
-    /*
-    private int padData(byte[] data){
-    	//Pad M with the pad10*1 padding rule to reach a length multiple of r bits
-        //M: message pair (length in bits, string of hex characters ('9AFC...')
-        //n: length in bits (must be a multiple of 8)
-        //Example: pad10star1([60, 'BA594E0FB9EBBD30'],8) returns 'BA594E0FB9EBBD93'
-        
-
-        //Check the length of the provided string
-        if (state.datalen%2!=0)
-            //Pad with one '0' to reach correct lengt
-            data[state.datalen]='0';
-        if (state.datalen>state.hashval)
-            raise KeccakError.KeccakError("rate must be greater than the output length");
-        nr_bytes_filled=state.datalen;
-        nbr_bits_filled=0;
-        n = state.hashval;
-        l = (state.datalen*8) % n;
-        if ((n-8) <= l <= (n-2)){
-            if (nbr_bits_filled == 0)
-                my_byte = 0;
-                
-            else{
-            	raise KeccakError.KeccakError("error in padding message 1");
-            	//my_byte=int(my_string[nr_bytes_filled*2:nr_bytes_filled*2+2],16)
-            }     
-            my_byte=(my_byte>>(8-nbr_bits_filled))
-            my_byte=my_byte+2**(nbr_bits_filled)+2**7
-            my_byte="%02X" % my_byte
-            my_string=my_string[0:nr_bytes_filled*2]+my_byte
-        }
-        else{
-            if (nbr_bits_filled == 0)
-                my_byte = 0
-            else{
-            	raise KeccakError.KeccakError("error in padding message 2");
-            	//my_byte=int(my_string[nr_bytes_filled*2:nr_bytes_filled*2+2],16)
-            }
-            my_byte=(my_byte>>(8-nbr_bits_filled))
-            my_byte=my_byte+2**(nbr_bits_filled)
-            my_byte="%02X" % my_byte
-            my_string=my_string[0:nr_bytes_filled*2]+my_byte
-            while((8*len(my_string)//2)%n < (n-8)):
-                my_string=my_string+'00'
-            my_string = my_string+'80'
-
-        return my_string
-	
-    }
-        */
-    
     void SwitchToSqueezingPhase(KECCAKHashState state, byte[] data)
     {
         // Note: the bits are numbered from 0=LSB to 7=MSB
         if (state.bitsInQueue + 1 == state.r) {
-            //state.dataQueue[state.bitsInQueue/8 ] |= 1 << (state.bitsInQueue % 8);
-            //RUN PERMUTATION!
-            //AbsorbQueue(state);
-            //memset(state.dataQueue, 0, state.rate/8);
+            state.dataQueue[state.bitsInQueue/8 ] |= 1 << (state.bitsInQueue % 8);
+			for(int k = 0;k<state.r/8;k++){
+				state.s[k] ^= state.dataQueue[k];
+			}
+			fromBytesToWords(state);
+			for(int l=0; l<state.n;l++){
+				theta(state.sWords);
+				rho(state.sWords);
+				pi(state.sWords);
+				chi(state.sWords);
+				iota(state.sWords,l);
+			}
+			fromWordsToBytes(state);
+			for(int i = 0;i<state.r/8;i++){
+				state.dataQueue[i] = 0;
+			}
         }
         else {
-            //COPY TO DATA QUEUE!
-        	//memset(state.dataQueue + (state->bitsInQueue+7)/8, 0, state->rate/8 - (state->bitsInQueue+7)/8);
-            //state.dataQueue[state.bitsInQueue/8 ] |= 1 << (state.bitsInQueue % 8);
+        	for(int i = 0;i<state.r/8 - (state.bitsInQueue+7)/8;i++){
+        		state.dataQueue[((state.bitsInQueue+7)/8)+i] = 0;
+        	}
+            state.dataQueue[state.bitsInQueue/8 ] |= 1 << (state.bitsInQueue % 8);
         }
         state.dataQueue[(state.r-1)/8] |= 1 << ((state.r-1) % 8);
-        //RUN PERMUTATION!
-        //AbsorbQueue(state);
+		for(int k = 0;k<state.r/8;k++){
+			state.s[k] ^= state.dataQueue[k];
+		}
+		fromBytesToWords(state);
+		for(int l=0; l<state.n;l++){
+			theta(state.sWords);
+			rho(state.sWords);
+			pi(state.sWords);
+			chi(state.sWords);
+			iota(state.sWords,l);
+		}
+		fromWordsToBytes(state);
         
-        //COPY TO QUEUE!
-        //KeccakExtract(state.s, state.dataQueue, state.r/64);
+		for(int j=0;j<state.r/8;j++){
+			state.dataQueue[j]= state.s[j];
+		}
         state.bitsAvailableForSqueezing = state.r;
         state.squeezing = true;
     }
@@ -347,39 +347,33 @@ public class KECCAKAlgorithm{
         		return a;
         	}
         }
-        
-    public int getStatus(){
-        return this.status;
-    }
+    public void fromBytesToWords(KECCAKHashState state){
+        int i, j;
 
-    public byte[] getHash(){
-    	StringBuilder tb = new StringBuilder();
-        return this.hashval;
+        for(i=0; i<(state.b/64); i++) {
+            state.sWords[i] = 0;
+            for(j=0; j<(64/8); j++)
+                state.sWords[i] |= (long)(state.s[i*(64/8)+j]) << (8*j);
+        }
     }
-    
+        
+    public void fromWordsToBytes(KECCAKHashState state){
+        int i, j;
+
+        for(i=0; i<(state.b/64); i++)
+            for(j=0; j<(64/8); j++)
+                state.s[i*(64/8)+j] = (byte)((state.sWords[i] >> (8*j)) & 0xFF);
+    }
 	public double logOfBase(int base, int num) {
 	    return Math.log(num) / Math.log(base);
+	}
+	
+	public byte[] getHash(){
+		return this.hashval;
 	}
 
 	public int index(int x, int y){
 		int ret = (x%5)+5*(y%5);
 		return ret;
 	}
-    
-    
-	private byte[] hexStrToByteField(String hexStr){
-        if(hexStr.length()%2==0){
-            byte [] bytes = new byte[hexStr.length()/2];
-            int i,j;
-
-            try{
-                for(i=0,j=0;j<hexStr.length();i++, j+=2)
-                       bytes[i] = (byte)Integer.parseInt(hexStr.substring(j,j+2), 16);
-            }catch(Exception e){
-                return null;
-            }
-            return bytes;
-        }else
-            return null;
-        }
-    }
+}
