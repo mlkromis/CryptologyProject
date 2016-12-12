@@ -12,20 +12,24 @@ package org.jcryptool.crypto.modern.sha3.Keccak;
 public class KECCAKHashState {
 	public int hashbitlen;
 	public byte[] data;
-	public long[] dataQueue;
+	public byte[] dataQueue;
+	public byte [] output;
     public long databitlen;
-    public long bitsInQueue;
+    public int bitsInQueue;
     public boolean squeezing;
-    public long bitsAvailableForSqueezing;
+    public int bitsAvailableForSqueezing;
     public int n;
     public int r;
     public int c;
     public int b;
-    public long[] s;
+    public byte[] s;
+    public long[] sWords;
 
     public void Keccak_HashState() {
     	this.b = 1600;
     	this.n = 24;
-    	this.s = new long[25];
+    	this.s = new byte[this.b/8];
+    	this.sWords = new long[this.b/8];
+    	this.bitsInQueue = 0;
     }
 }
