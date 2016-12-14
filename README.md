@@ -1,8 +1,6 @@
 #Jcryptool visualization plug-in for SHA3 candidate BLAKE224
 
-##This is only for developer, not user!!!!
-
-##The plug-ins won't be integrated into the Jcryptool software and released until they are authorized by Jcryptool Project.
+##This is only for developer, not user!!!! The plug-ins won't be integrated into the Jcryptool software and released until they are authorized by Jcryptool Project.
 
 For the developers of Jcryptool Project leaders. Check the detail in README.md of master branch.
 
