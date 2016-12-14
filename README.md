@@ -1,6 +1,6 @@
 #Jcryptool visualization plug-in for SHA3 candidate BLAKE224
 
-##This is only for developer, not user!!!! The plug-ins won't be integrated into the Jcryptool software and released until they are authorized by Jcryptool Project leaders. For more details, please check the detail in README.md of master branch.
+##This is only for developers, not users!!!! The plug-ins won't be integrated into the Jcryptool software and released until they are authorized by Jcryptool Project leaders. For more details, please check the detail in README.md of master branch.
 
 1. SHA-3 candidates list is on the official website of NIST(National Institute of Standards and Technology) below. http://csrc.nist.gov/groups/ST/hash/sha-3/Round1/submissions_rnd1.html. The submitted materials of the candidates can all be found on this website. 
 
