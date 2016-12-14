@@ -20,7 +20,7 @@ To download JCrypTool, follow the instructions located here:
 https://www.cryptool.org/de/jcryptool
 
 ###Attention: 
-The plug-ins won't be integrated into the released version of Jcryptool software in the website above until they are approved by the Jcryptool Project leaders Dominik Schadow(schadow@gmail.com)and Prof. Bernhard Esslinger(esslinger@fb5.uni-siegen.de). So currently users can only integrate the plug-ins into Jcryptool in the same way as developers do. The general guidline of integrate plug-ins into Jcryptool is here https://github.com/jcryptool/core/wiki. There are also additional steps to add specific plug-ins. The instructions on those additional steps are provided in our seperate branches.
+The plug-ins won't be integrated into the released version of Jcryptool software in the website above until they are approved by the Jcryptool Project leaders Dominik Schadow(schadow@gmail.com)and Prof. Bernhard Esslinger(esslinger@fb5.uni-siegen.de). So currently users can only integrate the plug-ins into Jcryptool in the same way as developers do. The general guidline of integrate plug-ins into Jcryptool is here https://github.com/jcryptool/core/wiki. There are also specific steps to follow to add specific plug-ins. The instructions on those have been provided in our seperate branches.
 We are currently working on packaging all of these files into plugins to be easily instered into the JCrypTool Application. 
 
 ##Developing tools:
