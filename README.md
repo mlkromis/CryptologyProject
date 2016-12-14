@@ -2,7 +2,7 @@
 ##Purpose
 This project focuses on developing SHA3 candidates plug-ins for Jcryptool Software. 
 
-Jcryptool Software is a platform mainly focusing on collecting various encrytion algorithms. Developers can add functions to this platform by developing plug-ins for the software. More information on Jcryptool can found in https://github.com/jcryptool/core/wiki.
+Jcryptool Software is a platform which has collected various encrytion algorithms for cryptanalysis. Developers can add functions to this platform by developing plug-ins for the software. More information on Jcryptool can found in https://github.com/jcryptool/core/wiki.
 
 About SHA3 and SHA3 candidates, more information can be found in https://en.wikipedia.org/wiki/SHA-3 and https://en.wikipedia.org/wiki/NIST_hash_function_competition.
 The plug-ins we develop can be categorized into 2 branches, implementation and visualization plug-ins. The implementation plug-ins can be integrated into Jcryptool software so that users can use this software to encrypt their messages by using SHA3 candidates, as well as compare the encrypted messages each SHA3 candidates generate. The visualization plug-ins can be integrated into Jcryptool software so that users can use this plug-in to learn how the algorithms of encryption candidates work so that the encryption process won't be a black box.
