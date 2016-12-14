@@ -27,8 +27,11 @@ ecllipse
 
 ##Developers:
 Daniel Finn<djfinn14@gmail.com>
+
 Maria Kromis<mlkromis@bu.edu>
+
 Weichao Zhou<zwc662@bu.edu>
+
 Zixun Yuan<ystephen@bu.edu>
 
 
