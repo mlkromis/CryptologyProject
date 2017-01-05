@@ -8,7 +8,7 @@ The plug-ins won't be integrated into the Jcryptool software and released until 
 
 2.  To add visualization plug-ins, please firstly add the commands below into the org.jcryptool.visual.feature/feature.xml.
 
-   <plugin
+   <!plugin
          id="org.jcryptool.visual.sha3candidates"
          download-size="0"
          install-size="0"
